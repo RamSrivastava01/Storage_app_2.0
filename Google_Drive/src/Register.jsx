@@ -1,11 +1,19 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+
+
 
 function Register() {
+   const navigate = useNavigate();
+   const BASE_URL = `http://localhost:8080`
+   const [isSuccess, setIsSuccess] = useState(false);
+   const [error, setError] = useState("");
    const [formData, setFormData] = useState({
       name: "",
       email: "",
       password: "",
    });
+
 
    function handleChange(e) {
       setFormData({
@@ -14,10 +22,27 @@ function Register() {
       });
    }
 
-   function handleSubmit(e) {
+   async function handleSubmit(e) {
       e.preventDefault();
+      const response = await fetch(`${BASE_URL}/user`, {
+         method: "POST",
+         body: JSON.stringify(formData),
+         headers: {
+            "Content-Type": "application/json"
+         }
+      })
+      const data = await response.json();
+      if (data.error) {
+         setError(data.error)
+      }
+      else {
+         setIsSuccess(true)
+         setTimeout(() => {
+            navigate("/")
+         }, 2000);
+         console.log(data)
+      }
 
-      console.log(formData);
    }
 
    return (
@@ -60,8 +85,8 @@ function Register() {
                   style={styles.input}
                />
             </div>
-
-            <button type="submit" style={styles.button}>
+            <p style={{ color: "red" }}>{error}</p>
+            <button type="submit" style={isSuccess ? { backgroundColor: "green", color: "fff", width: "100%" } : { backgroundColor: "purple", color: "#fff ", width: "100%" }}>
                Register
             </button>
          </form>
