@@ -3,14 +3,20 @@ import { createWriteStream } from "fs";
 import { mkdir, readdir, rename, rm, stat } from "fs/promises";
 import cors from "cors";
 import path, { dirname, join } from "path";
+import cookieParser from "cookie-parser";
 import directoryRoutes from "./Routes/directoryRoutes.js";
 import filesRoutes from "./Routes/filesRoutes.js";
 import userRoutes from './Routes/userRoutes.js'
 export const app = express();
 
+app.use(cookieParser())
+
 const PORT = 8080 || 5342;
 app.use(express.json());
-app.use(cors());
+app.use(cors({
+   origin: 'http://localhost:5173',
+   credentials: true
+}));
 
 
 

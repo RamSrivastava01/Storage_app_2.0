@@ -8,14 +8,18 @@ import filesData from '../filesDb.json' with {type: 'json'}
 import crypto from "crypto";
 
 
+
 // Using multer library for file upload on to the server;
 //This makes the task easy for making file upload;
-
 const router = express.Router();
 // console.log(router)
 
 // >=====Getting data from directory=====<
 router.get("/{:id}", async (req, res) => {
+   const { uid } = req.cookies;
+   if (!uid) {
+      return res.status(404).json({ error: "User Not Logged In" })
+   }
    const { id } = req.params || directoriesData[0].id
    const directoryData = id ? directoriesData.find((directory) => directory.id === id) : directoriesData[0]
    if (!directoryData) {

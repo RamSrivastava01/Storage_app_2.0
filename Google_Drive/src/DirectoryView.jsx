@@ -42,7 +42,9 @@ function DirectoryView() {
     * Fetch directory contents
     */
    const fetchDirectoryItems = useCallback(async () => {
-      const response = await fetch(`${BASE_URL}/directory/${dirId || ""}`);
+      const response = await fetch(`${BASE_URL}/directory/${dirId || ""}`, {
+         credentials: "include"
+      });
       return response.json();
    }, [dirId]);
 
