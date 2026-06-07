@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DirectoryHeader from "./components/DirectoryHeader";
 import CreateDirectoryModal from "./components/CreateDirectoryModal";
@@ -7,7 +7,7 @@ import DirectoryList from "./components/DirectoryList";
 import "./DirectoryView.css";
 
 function DirectoryView() {
-   const BASE_URL = "http://localhost:8080";
+   const BASE_URL = "http://localhost:4000";
    const { dirId } = useParams();
    const navigate = useNavigate();
 
@@ -41,14 +41,18 @@ function DirectoryView() {
    /**
     * Fetch directory contents
     */
-   const fetchDirectoryItems = useCallback(async () => {
+   async function getDirectoryItems() {
       const response = await fetch(`${BASE_URL}/directory/${dirId || ""}`, {
-         credentials: "include"
+         credentials: "include",
       });
-      return response.json();
-   }, [dirId]);
 
-   const applyDirectoryItems = useCallback((data) => {
+      const data = await response.json();
+
+      if (response.status === 401) {
+         navigate("/login");
+         return;
+      }
+
       // Set directory name
       if (data.name) {
          setDirectoryName(dirId ? data.name : "My Drive");
@@ -61,26 +65,13 @@ function DirectoryView() {
       const reversedFiles = [...data.files].reverse();
       setDirectoriesList(reversedDirs);
       setFilesList(reversedFiles);
-   }, [dirId]);
-
-   const getDirectoryItems = useCallback(async () => {
-      const data = await fetchDirectoryItems();
-      applyDirectoryItems(data);
-   }, [applyDirectoryItems, fetchDirectoryItems]);
+   }
 
    useEffect(() => {
-      let isCancelled = false;
-
-      fetchDirectoryItems().then((data) => {
-         if (!isCancelled) {
-            applyDirectoryItems(data);
-         }
-      });
-
-      return () => {
-         isCancelled = true;
-      };
-   }, [applyDirectoryItems, fetchDirectoryItems]);
+      getDirectoryItems();
+      // Reset context menu
+      setActiveContextMenu(null);
+   }, [dirId]);
 
    /**
     * Decide file icon
@@ -123,7 +114,6 @@ function DirectoryView() {
     */
    function handleRowClick(type, id) {
       if (type === "directory") {
-         setActiveContextMenu(null);
          navigate(`/directory/${id}`);
       } else {
          window.location.href = `${BASE_URL}/file/${id}`;
@@ -197,6 +187,7 @@ function DirectoryView() {
       // Start upload
       const xhr = new XMLHttpRequest();
       xhr.open("POST", `${BASE_URL}/file/${dirId || ""}`, true);
+      xhr.withCredentials = true;
       xhr.setRequestHeader("filename", currentItem.name);
 
       xhr.upload.addEventListener("progress", (evt) => {
@@ -232,9 +223,8 @@ function DirectoryView() {
 
       // Remove from progressMap
       setProgressMap((prev) => {
-         const copy = { ...prev };
-         delete copy[tempId];
-         return copy;
+         const { [tempId]: _, ...rest } = prev;
+         return rest;
       });
 
       // Remove from Xhr map
@@ -251,6 +241,7 @@ function DirectoryView() {
    async function handleDeleteFile(id) {
       await fetch(`${BASE_URL}/file/${id}`, {
          method: "DELETE",
+         credentials: "include"
       });
       getDirectoryItems();
    }
@@ -258,6 +249,7 @@ function DirectoryView() {
    async function handleDeleteDirectory(id) {
       await fetch(`${BASE_URL}/directory/${id}`, {
          method: "DELETE",
+         credentials: "include"
       });
       getDirectoryItems();
    }
@@ -272,6 +264,7 @@ function DirectoryView() {
          headers: {
             dirname: newDirname,
          },
+         credentials: "include",
       });
       setNewDirname("New Folder");
       setShowCreateDirModal(false);
@@ -297,6 +290,7 @@ function DirectoryView() {
                "Content-Type": "application/json",
             },
             body: JSON.stringify({ newFilename: renameValue }),
+            credentials: "include"
          });
       } else {
          await fetch(`${BASE_URL}/directory/${renameId}`, {
@@ -305,6 +299,7 @@ function DirectoryView() {
                "Content-Type": "application/json",
             },
             body: JSON.stringify({ newDirName: renameValue }),
+            credentials: "include"
          });
       }
 

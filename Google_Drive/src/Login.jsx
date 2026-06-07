@@ -1,9 +1,9 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Auth.css";
 
 const Login = () => {
-   const BASE_URL = "http://localhost:8080";
+   const BASE_URL = "http://localhost:4000";
 
    const [formData, setFormData] = useState({
       email: "",

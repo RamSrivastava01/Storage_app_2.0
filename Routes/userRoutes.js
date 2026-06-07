@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import crypto from 'crypto'
-import directoriesData from '../directoryDB.json' with {type: "json"}
+import directoriesData from '../directoriesDB.json' with {type: "json"}
 import usersData from "../usersDB.json" with {type: "json"}
 import { writeFile } from "fs/promises";
 
@@ -42,7 +42,7 @@ router.post("/register", async (req, res, next) => {
    })
 
    try {
-      await writeFile('./directoryDB.json', JSON.stringify(directoriesData))
+      await writeFile('./directoriesDB.json', JSON.stringify(directoriesData))
       await writeFile('./usersDB.json', JSON.stringify(usersData))
       res.status(201).json({ message: `User created with ID ${userId}` })
    } catch (error) {

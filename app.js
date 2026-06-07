@@ -7,11 +7,12 @@ import cookieParser from "cookie-parser";
 import directoryRoutes from "./Routes/directoryRoutes.js";
 import filesRoutes from "./Routes/filesRoutes.js";
 import userRoutes from './Routes/userRoutes.js'
+import CheckAuth from "./auth.js";
 export const app = express();
 
 app.use(cookieParser())
 
-const PORT = 8080 || 5342;
+const PORT = 4000 || 5342;
 app.use(express.json());
 app.use(cors({
    origin: 'http://localhost:5173',
@@ -21,9 +22,9 @@ app.use(cors({
 
 
 
-app.use("/directory", directoryRoutes)
+app.use("/directory", CheckAuth, directoryRoutes)
 
-app.use("/file", filesRoutes)
+app.use("/file", CheckAuth, filesRoutes)
 
 app.use("/user", userRoutes)
 

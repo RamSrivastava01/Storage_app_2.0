@@ -14,9 +14,7 @@ function CreateDirectoryModal({
       inputRef.current.focus();
       inputRef.current.select();
     }
-  }, []);
 
-  useEffect(() => {
     // Listen for "Escape" key to close the modal
     const handleKeyDown = (e) => {
       if (e.key === "Escape") {
@@ -29,7 +27,7 @@ function CreateDirectoryModal({
     return () => {
       document.removeEventListener("keydown", handleKeyDown);
     };
-  }, [onClose]);
+  }, []);
 
   // Stop propagation when clicking inside the content
   const handleContentClick = (e) => {

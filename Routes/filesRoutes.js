@@ -5,14 +5,14 @@ import cors from "cors";
 import path, { dirname, join } from "path";
 import crypto from 'crypto'
 import filesData from '../filesDb.json' with {type: 'json'}
-import directoriesData from '../directoryDB.json' with {type: "json"}
+import directoriesData from '../directoriesDB.json' with {type: "json"}
 
 
 
 const router = express.Router();
 // File Post Route
 router.post("/{:parentDirId}", (req, res) => {
-   const parentDirId = req.params.parentDirId || directoriesData[0].id
+   const parentDirId = req.params.parentDirId || req.user.rootDirId
    const filename = req.headers.filename || "untitled"
    const id = crypto.randomUUID();
    const extension = path.extname(filename);
@@ -30,7 +30,7 @@ router.post("/{:parentDirId}", (req, res) => {
       parentDirData.files.push(id)
       try {
          await writeFile('./filesDB.json', JSON.stringify(filesData))
-         await writeFile('./directoryDB.json', JSON.stringify(directoriesData))
+         await writeFile('./directoriesDB.json', JSON.stringify(directoriesData))
          return res.status(201).json({ message: "File Uploaded" });
       } catch (error) {
          // if we do next here then the error is catched by the global middleware. 
@@ -107,7 +107,7 @@ router.delete("/:id", async (req, res) => {
       parentDirData.files = parentDirData.files.filter((fileId) => fileId != id)
 
       await writeFile("./filesDB.json", JSON.stringify(filesData))
-      await writeFile("./directoryDB.json", JSON.stringify(directoriesData))
+      await writeFile("./directoriesDB.json", JSON.stringify(directoriesData))
 
       return res.json({
          message: "File Deleted Successfully",
