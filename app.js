@@ -6,34 +6,33 @@ import path, { dirname, join } from "path";
 import cookieParser from "cookie-parser";
 import directoryRoutes from "./Routes/directoryRoutes.js";
 import filesRoutes from "./Routes/filesRoutes.js";
-import userRoutes from './Routes/userRoutes.js'
-import CheckAuth from "./auth.js";
+import userRoutes from "./Routes/userRoutes.js";
+import CheckAuth from "./middlewares/auth.js";
+
 export const app = express();
 
-app.use(cookieParser())
+app.use(cookieParser());
 
 const PORT = 4000 || 5342;
 app.use(express.json());
-app.use(cors({
-   origin: 'http://localhost:5173',
-   credentials: true
-}));
+app.use(
+   cors({
+      origin: "http://localhost:5173",
+      credentials: true,
+   }),
+);
 
+app.use("/directory", CheckAuth, directoryRoutes);
 
+app.use("/file", CheckAuth, filesRoutes);
 
-
-app.use("/directory", CheckAuth, directoryRoutes)
-
-app.use("/file", CheckAuth, filesRoutes)
-
-app.use("/user", userRoutes)
+app.use("/user", userRoutes);
 
 app.use((err, req, res, next) => {
-   console.log("error occured", err.message)
-   res.status(500).json({ error: "Internal Server Error" });
-})
+   console.log("error occured", err.message);
+   return res.status(500).json({ error: "Internal Server Error" });
+});
 
 app.listen(PORT, () => {
-
    console.log(` server is up on ${PORT}`);
 });

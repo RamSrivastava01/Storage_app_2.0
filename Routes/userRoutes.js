@@ -4,7 +4,7 @@ import crypto from "crypto";
 import directoriesData from "../directoriesDB.json" with { type: "json" };
 import usersData from "../usersDB.json" with { type: "json" };
 import { writeFile } from "fs/promises";
-import CheckAuth from "../auth.js";
+import CheckAuth from "../middlewares/auth.js";
 
 const router = express.Router();
 

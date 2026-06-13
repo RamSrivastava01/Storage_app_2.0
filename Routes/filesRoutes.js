@@ -6,6 +6,7 @@ import path, { dirname, join } from "path";
 import crypto from "crypto";
 import filesData from "../filesDb.json" with { type: "json" };
 import directoriesData from "../directoriesDB.json" with { type: "json" };
+import validateIdMiddleware from "../middlewares/validateIdMiddleware.js";
 
 const router = express.Router();
 // File Post Route
@@ -47,6 +48,9 @@ router.post("/{:parentDirId}", (req, res) => {
 
 //File Get Route
 
+router.param("id", validateIdMiddleware);
+router.param("parentDirId", validateIdMiddleware);
+
 router.get("/:id", (req, res) => {
    console.log(req.url);
    const { id } = req.params;
@@ -64,18 +68,18 @@ router.get("/:id", (req, res) => {
       return res.status(404).json({ message: `${id} does not exist` });
    }
 
+   const filePath = `${process.cwd()}/storage/${id}${fileData.extension}`;
+
    if (req.query.action === "download") {
-      res.set("Content-Disposition", `attachment; filename=${fileData.name}`);
+      // res.set("Content-Disposition", `attachment; filename=${fileData.name}`);
+      return res.download(filePath, fileData.name);
    }
-   res.sendFile(
-      `${process.cwd()}/storage/${id}${fileData.extension}`,
-      (err) => {
-         // console.log(err);
-         if (!res.headersSent && err) {
-            return res.status(404).json({ error: "File not found!" });
-         }
-      },
-   );
+   res.sendFile(filePath, (err) => {
+      // console.log(err);
+      if (!res.headersSent && err) {
+         return res.status(404).json({ error: "File not found!" });
+      }
+   });
 });
 
 // File Patch Route

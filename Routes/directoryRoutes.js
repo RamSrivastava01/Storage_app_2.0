@@ -7,6 +7,7 @@ import directoriesData from "../directoriesDB.json" with { type: "json" };
 import filesData from "../filesDb.json" with { type: "json" };
 import crypto from "crypto";
 import usersData from "../usersDB.json" with { type: "json" };
+import validateIdMiddleware from "../middlewares/validateIdMiddleware.js";
 
 // Using multer library for file upload on to the server;
 //This makes the task easy for making file upload;
@@ -14,6 +15,10 @@ const router = express.Router();
 // console.log(router)
 
 // >=====Getting data from directory=====<
+
+router.param("id", validateIdMiddleware);
+router.param("parentDirId", validateIdMiddleware);
+
 router.get("/{:id}", async (req, res) => {
    const user = req.user;
    const id = req.params.id || user.rootDirId;
