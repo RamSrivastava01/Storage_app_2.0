@@ -4,7 +4,7 @@ import { mkdir, readdir, rename, rm, stat, writeFile } from "fs/promises";
 import cors from "cors";
 import path, { dirname, join } from "path";
 import crypto from "crypto";
-import filesData from "../filesDb.json" with { type: "json" };
+import filesData from "../filesDB.json" with { type: "json" };
 import directoriesData from "../directoriesDB.json" with { type: "json" };
 import validateIdMiddleware from "../middlewares/validateIdMiddleware.js";
 
