@@ -13,7 +13,7 @@ function DirectoryView() {
 
    // Displayed directory name
    const [directoryName, setDirectoryName] = useState("My Drive");
-
+   
    // Lists of items
    const [directoriesList, setDirectoriesList] = useState([]);
    const [filesList, setFilesList] = useState([]);
@@ -77,6 +77,7 @@ function DirectoryView() {
 
          await handleFetchErrors(response);
          const data = await response.json();
+         console.log(data);
 
          // Set directory name
          setDirectoryName(dirId ? data.name : "My Drive");

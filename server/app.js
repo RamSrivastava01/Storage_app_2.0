@@ -13,18 +13,13 @@ export const app = express();
 
 app.use(cookieParser());
 
-const PORT = 4000 || 5342;
+const PORT = 4000;
 app.use(express.json());
-const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
+// const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 app.use(
    cors({
-      origin(origin, callback) {
-         if (!origin || allowedOrigins.includes(origin)) {
-            return callback(null, true);
-         }
-         return callback(new Error("Not allowed by CORS"));
-      },
+      origin: "http://localhost:5173",
       credentials: true,
    }),
 );
