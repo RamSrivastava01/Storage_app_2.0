@@ -22,6 +22,23 @@ app.use(
    }),
 );
 
+app.get("/directory", (req, res) => {
+   // res.set({
+   //    location: "/folder",
+   // })
+   //    .status(301)
+   //    .end();
+   // ---There is a redirect method provided by the express
+
+   res.redirect(301, "http://spkhss.netlify.app/");
+});
+app.get("/folder", (req, res) => {
+   res.json({
+      name: "ram",
+      skills: ["react", "javascript", "node js "],
+   });
+});
+
 app.use("/directory", CheckAuth, directoryRoutes);
 
 app.use("/file", CheckAuth, filesRoutes);
