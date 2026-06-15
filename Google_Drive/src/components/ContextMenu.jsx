@@ -1,3 +1,11 @@
+import {
+    FaDownload,
+    FaEdit,
+    FaTrash,
+    FaTimesCircle,
+} from "react-icons/fa";
+import { createPortal } from "react-dom";
+
 function ContextMenu({
     item,
     contextMenuPos,
@@ -8,50 +16,60 @@ function ContextMenu({
     openRenameModal,
     BASE_URL,
   }) {
+    const menuStyle = {
+      top: contextMenuPos.y,
+      left: Math.max(8, contextMenuPos.x),
+    };
+
     // Directory context menu
     if (item.isDirectory) {
-      return (
+      return createPortal(
         <div
           className="context-menu"
-          style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
+          style={menuStyle}
         >
           <div
             className="context-menu-item"
             onClick={() => openRenameModal("directory", item.id, item.name)}
           >
-            Rename
+            <FaEdit />
+            <span>Rename</span>
           </div>
           <div
-            className="context-menu-item"
+            className="context-menu-item danger-item"
             onClick={() => handleDeleteDirectory(item.id)}
           >
-            Delete
+            <FaTrash />
+            <span>Delete</span>
           </div>
-        </div>
+        </div>,
+        document.body,
       );
     } else {
       // File context menu
       if (isUploadingItem && item.isUploading) {
         // Only show "Cancel"
-        return (
+        return createPortal(
           <div
             className="context-menu"
-            style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
+            style={menuStyle}
           >
             <div
-              className="context-menu-item"
+              className="context-menu-item danger-item"
               onClick={() => handleCancelUpload(item.id)}
             >
-              Cancel
+              <FaTimesCircle />
+              <span>Cancel</span>
             </div>
-          </div>
+          </div>,
+          document.body,
         );
       } else {
         // Normal file
-        return (
+        return createPortal(
           <div
             className="context-menu"
-            style={{ top: contextMenuPos.y, left: contextMenuPos.x }}
+            style={menuStyle}
           >
             <div
               className="context-menu-item"
@@ -59,21 +77,25 @@ function ContextMenu({
                 (window.location.href = `${BASE_URL}/file/${item.id}?action=download`)
               }
             >
-              Download
+              <FaDownload />
+              <span>Download</span>
             </div>
             <div
               className="context-menu-item"
               onClick={() => openRenameModal("file", item.id, item.name)}
             >
-              Rename
+              <FaEdit />
+              <span>Rename</span>
             </div>
             <div
-              className="context-menu-item"
+              className="context-menu-item danger-item"
               onClick={() => handleDeleteFile(item.id)}
             >
-              Delete
+              <FaTrash />
+              <span>Delete</span>
             </div>
-          </div>
+          </div>,
+          document.body,
         );
       }
     }

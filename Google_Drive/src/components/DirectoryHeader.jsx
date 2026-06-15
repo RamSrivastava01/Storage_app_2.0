@@ -1,11 +1,15 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import {
+   FaCloud,
    FaFolderPlus,
    FaUpload,
    FaUser,
    FaSignOutAlt,
    FaSignInAlt,
+   FaLayerGroup,
+   FaFolder,
+   FaFileAlt,
 } from "react-icons/fa";
 
 function DirectoryHeader({
@@ -14,10 +18,13 @@ function DirectoryHeader({
    onUploadFilesClick,
    fileInputRef,
    handleFileSelect,
+   folderCount,
+   fileCount,
+   totalCount,
    disabled = false,
 }) {
    // Use a constant for the API base URL
-   const BASE_URL = "http://localhost:4000";
+   const BASE_URL = `${window.location.protocol}//${window.location.hostname}:4000`;
 
    const [showUserMenu, setShowUserMenu] = useState(false);
    const [loggedIn, setLoggedIn] = useState(false);
@@ -108,26 +115,52 @@ function DirectoryHeader({
 
    return (
       <header className="directory-header">
-         <h1>{directoryName}</h1>
+         <div className="brand-block">
+            <div className="brand-mark">
+               <FaCloud />
+            </div>
+            <div>
+               <span className="eyebrow">Storage App</span>
+               <h1>{directoryName}</h1>
+            </div>
+         </div>
+
+         <div className="drive-stats" aria-label="Directory summary">
+            <span>
+               <FaLayerGroup />
+               {totalCount} items
+            </span>
+            <span>
+               <FaFolder />
+               {folderCount} folders
+            </span>
+            <span>
+               <FaFileAlt />
+               {fileCount} files
+            </span>
+         </div>
+
          <div className="header-links">
             {/* Create Folder (icon button) */}
             <button
-               className="icon-button"
+               className="action-button"
                title="Create Folder"
                onClick={onCreateFolderClick}
                disabled={disabled}
             >
                <FaFolderPlus />
+               <span>New Folder</span>
             </button>
 
             {/* Upload Files (icon button) */}
             <button
-               className="icon-button"
+               className="action-button primary-action"
                title="Upload Files"
                onClick={onUploadFilesClick}
                disabled={disabled}
             >
                <FaUpload />
+               <span>Upload</span>
             </button>
 
             {/* Hidden file input */}

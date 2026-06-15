@@ -45,6 +45,10 @@ function DirectoryItem({
   }
 
   const isUploadingItem = item.id.startsWith("temp-");
+  const fileExtension = item.isDirectory
+    ? "Folder"
+    : item.extension || item.name.split(".").pop() || "File";
+  const itemTypeLabel = item.isDirectory ? "Folder" : "File";
 
   return (
     <div
@@ -58,12 +62,24 @@ function DirectoryItem({
     >
       <div className="item-left-container">
         <div className="item-left">
-          {item.isDirectory ? (
-            <FaFolder className="folder-icon" />
-          ) : (
-            renderFileIcon(getFileIcon(item.name))
-          )}
-          <span>{item.name}</span>
+          <div className={`item-icon-shell ${item.isDirectory ? "folder-shell" : "file-shell"}`}>
+            {item.isDirectory ? (
+              <FaFolder className="folder-icon" />
+            ) : (
+              renderFileIcon(getFileIcon(item.name))
+            )}
+          </div>
+          <div className="item-copy">
+            <span className="item-name">
+              <span className="item-title">{item.name}</span>
+              <span className={`item-type-pill ${item.isDirectory ? "folder-pill" : "file-pill"}`}>
+                {itemTypeLabel}
+              </span>
+            </span>
+            <span className="item-meta">
+              {isUploadingItem ? "Uploading" : fileExtension.replace(".", "").toUpperCase()}
+            </span>
+          </div>
         </div>
 
         {/* Three dots for context menu */}
@@ -80,10 +96,9 @@ function DirectoryItem({
         <div className="progress-container">
           <span className="progress-value">{Math.floor(uploadProgress)}%</span>
           <div
-            className="progress-bar"
+            className={`progress-bar ${uploadProgress === 100 ? "complete" : ""}`}
             style={{
               width: `${uploadProgress}%`,
-              backgroundColor: uploadProgress === 100 ? "#039203" : "#007bff",
             }}
           ></div>
         </div>

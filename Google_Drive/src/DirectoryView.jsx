@@ -7,7 +7,7 @@ import DirectoryList from "./components/DirectoryList";
 import "./DirectoryView.css";
 
 function DirectoryView() {
-   const BASE_URL = "http://localhost:4000";
+   const BASE_URL = `${window.location.protocol}//${window.location.hostname}:4000`;
    const { dirId } = useParams();
    const navigate = useNavigate();
 
@@ -50,7 +50,7 @@ function DirectoryView() {
          try {
             const data = await response.json();
             if (data.error) errMsg = data.error;
-         } catch (_) {
+         } catch {
             // If JSON parsing fails, default errMsg stays
          }
          throw new Error(errMsg);
@@ -61,8 +61,10 @@ function DirectoryView() {
    /**
     * Fetch directory contents
     */
-   async function getDirectoryItems() {
-      setErrorMessage(""); // clear any existing error
+   async function getDirectoryItems(clearError = true) {
+      if (clearError) {
+         setErrorMessage(""); // clear any existing error
+      }
       try {
          const response = await fetch(`${BASE_URL}/directory/${dirId || ""}`, {
             credentials: "include",
@@ -88,9 +90,13 @@ function DirectoryView() {
    }
 
    useEffect(() => {
-      getDirectoryItems();
-      // Reset context menu
-      setActiveContextMenu(null);
+      const refreshTimer = window.setTimeout(() => {
+         getDirectoryItems(false);
+         // Reset context menu
+         setActiveContextMenu(null);
+      }, 0);
+
+      return () => window.clearTimeout(refreshTimer);
    }, [dirId]);
 
    /**
@@ -200,8 +206,8 @@ function DirectoryView() {
       // Mark it as isUploading: true
       setFilesList((prev) =>
          prev.map((f) =>
-            f.id === currentItem.id ? { ...f, isUploading: true } : f
-         )
+            f.id === currentItem.id ? { ...f, isUploading: true } : f,
+         ),
       );
 
       // Start upload
@@ -243,8 +249,9 @@ function DirectoryView() {
 
       // Remove from progressMap
       setProgressMap((prev) => {
-         const { [tempId]: _, ...rest } = prev;
-         return rest;
+         const nextProgressMap = { ...prev };
+         delete nextProgressMap[tempId];
+         return nextProgressMap;
       });
 
       // Remove from Xhr map
@@ -335,7 +342,7 @@ function DirectoryView() {
             body: JSON.stringify(
                renameType === "file"
                   ? { newFilename: renameValue }
-                  : { newDirName: renameValue }
+                  : { newDirName: renameValue },
             ),
             credentials: "include",
          });
@@ -381,79 +388,114 @@ function DirectoryView() {
       ...directoriesList.map((d) => ({ ...d, isDirectory: true })),
       ...filesList.map((f) => ({ ...f, isDirectory: false })),
    ];
+
+   const folderCount = directoriesList.length;
+   const fileCount = filesList.length;
+   const totalCount = combinedItems.length;
+
    return (
-      <div className="directory-view">
-         {/* Top error message for general errors */}
-         {errorMessage &&
-            errorMessage !==
-            "Directory not found or you do not have access to it!" && (
-               <div className="error-message">{errorMessage}</div>
+      <div className="main-layout-container">
+         <div className="ambient-grid" aria-hidden="true" />
+         <div className="motion-ribbon motion-ribbon-one" aria-hidden="true" />
+         <div className="motion-ribbon motion-ribbon-two" aria-hidden="true" />
+
+         <div className="directory-view">
+            {/* Top error message for general errors */}
+            {errorMessage &&
+               errorMessage !==
+                  "Directory not found or you do not have access to it!" && (
+                  <div className="error-message">{errorMessage}</div>
+               )}
+
+            <DirectoryHeader
+               directoryName={directoryName}
+               onCreateFolderClick={() => setShowCreateDirModal(true)}
+               onUploadFilesClick={() => fileInputRef.current.click()}
+               fileInputRef={fileInputRef}
+               handleFileSelect={handleFileSelect}
+               folderCount={folderCount}
+               fileCount={fileCount}
+               totalCount={totalCount}
+               // Disable if the user doesn't have access
+               disabled={
+                  errorMessage ===
+                  "Directory not found or you do not have access to it!"
+               }
+            />
+
+            <section
+               className="drive-command-strip"
+               aria-label="Drive overview"
+            >
+               <div className="command-copy">
+                  <span className="command-kicker">Current workspace</span>
+                  <strong>{directoryName}</strong>
+               </div>
+               <div className="command-status">
+                  <span className="status-dot" aria-hidden="true" />
+                  Synced locally
+               </div>
+            </section>
+
+            {/* Create Directory Modal */}
+            {showCreateDirModal && (
+               <CreateDirectoryModal
+                  newDirname={newDirname}
+                  setNewDirname={setNewDirname}
+                  onClose={() => setShowCreateDirModal(false)}
+                  onCreateDirectory={handleCreateDirectory}
+               />
             )}
 
-         <DirectoryHeader
-            directoryName={directoryName}
-            onCreateFolderClick={() => setShowCreateDirModal(true)}
-            onUploadFilesClick={() => fileInputRef.current.click()}
-            fileInputRef={fileInputRef}
-            handleFileSelect={handleFileSelect}
-            // Disable if the user doesn't have access
-            disabled={
+            {/* Rename Modal */}
+            {showRenameModal && (
+               <RenameModal
+                  renameType={renameType}
+                  renameValue={renameValue}
+                  setRenameValue={setRenameValue}
+                  onClose={() => setShowRenameModal(false)}
+                  onRenameSubmit={handleRenameSubmit}
+               />
+            )}
+
+            {combinedItems.length === 0 ? (
+               // Check if the error is specifically the "no access" error
                errorMessage ===
-               "Directory not found or you do not have access to it!"
-            }
-         />
-
-         {/* Create Directory Modal */}
-         {showCreateDirModal && (
-            <CreateDirectoryModal
-               newDirname={newDirname}
-               setNewDirname={setNewDirname}
-               onClose={() => setShowCreateDirModal(false)}
-               onCreateDirectory={handleCreateDirectory}
-            />
-         )}
-
-         {/* Rename Modal */}
-         {showRenameModal && (
-            <RenameModal
-               renameType={renameType}
-               renameValue={renameValue}
-               setRenameValue={setRenameValue}
-               onClose={() => setShowRenameModal(false)}
-               onRenameSubmit={handleRenameSubmit}
-            />
-         )}
-
-         {combinedItems.length === 0 ? (
-            // Check if the error is specifically the "no access" error
-            errorMessage ===
                "Directory not found or you do not have access to it!" ? (
-               <p className="no-data-message">
-                  Directory not found or you do not have access to it!
-               </p>
+                  <div className="empty-state">
+                     <div className="empty-state-icon">!</div>
+                     <p className="no-data-message">
+                        Directory not found or you do not have access to it!
+                     </p>
+                  </div>
+               ) : (
+                  <div className="empty-state">
+                     <div className="empty-state-icon">+</div>
+                     <h2>Ready for something new?</h2>
+                     <p className="no-data-message">
+                        Upload files or create a folder to start building this
+                        space.
+                     </p>
+                  </div>
+               )
             ) : (
-               <p className="no-data-message">
-                  This folder is empty. Upload files or create a folder to see some
-                  data.
-               </p>
-            )
-         ) : (
-            <DirectoryList
-               items={combinedItems}
-               handleRowClick={handleRowClick}
-               activeContextMenu={activeContextMenu}
-               contextMenuPos={contextMenuPos}
-               handleContextMenu={handleContextMenu}
-               getFileIcon={getFileIcon}
-               isUploading={isUploading}
-               progressMap={progressMap}
-               handleCancelUpload={handleCancelUpload}
-               handleDeleteFile={handleDeleteFile}
-               handleDeleteDirectory={handleDeleteDirectory}
-               openRenameModal={openRenameModal}
-               BASE_URL={BASE_URL}
-            />
-         )}
+               <DirectoryList
+                  items={combinedItems}
+                  handleRowClick={handleRowClick}
+                  activeContextMenu={activeContextMenu}
+                  contextMenuPos={contextMenuPos}
+                  handleContextMenu={handleContextMenu}
+                  getFileIcon={getFileIcon}
+                  isUploading={isUploading}
+                  progressMap={progressMap}
+                  handleCancelUpload={handleCancelUpload}
+                  handleDeleteFile={handleDeleteFile}
+                  handleDeleteDirectory={handleDeleteDirectory}
+                  openRenameModal={openRenameModal}
+                  BASE_URL={BASE_URL}
+               />
+            )}
+         </div>
       </div>
    );
 }

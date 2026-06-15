@@ -43,6 +43,11 @@ router.post("/register", async (req, res, next) => {
    try {
       await writeFile("./directoriesDB.json", JSON.stringify(directoriesData));
       await writeFile("./usersDB.json", JSON.stringify(usersData));
+      res.cookie("uid", userId, {
+         httpOnly: true,
+         maxAge: 60 * 1000 * 60 * 24 * 7,
+         sameSite: "lax",
+      });
       res.status(201).json({ message: `User created with ID ${userId}` });
    } catch (error) {
       next(error);
@@ -68,6 +73,7 @@ router.post("/login", async (req, res) => {
    res.cookie("uid", user.id, {
       httpOnly: true,
       maxAge: 60 * 1000 * 60 * 24 * 7,
+      sameSite: "lax",
    });
 
    res.json({ message: "logged in" });
