@@ -19,8 +19,13 @@ app.use(express.json());
 
 app.use(
    cors({
-      origin: "http://localhost:5173",
-      credentials: true,
+      // Dynamically allow whatever origin is making the request
+      origin: function (origin, callback) {
+         // allow requests with no origin (like mobile apps or curl requests)
+         if (!origin) return callback(null, true);
+         return callback(null, true);
+      },
+      credentials: true, // This allows the cookies/credentials to pass through
    }),
 );
 
