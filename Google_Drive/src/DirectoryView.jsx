@@ -13,7 +13,7 @@ function DirectoryView() {
 
    // Displayed directory name
    const [directoryName, setDirectoryName] = useState("My Drive");
-   
+
    // Lists of items
    const [directoriesList, setDirectoriesList] = useState([]);
    const [filesList, setFilesList] = useState([]);
@@ -84,7 +84,14 @@ function DirectoryView() {
 
          // Reverse directories and files so new items show on top
          setDirectoriesList([...data.directories].reverse());
-         setFilesList([...data.files].reverse());
+         setFilesList((prev) => {
+            const uploadingFiles = prev.filter((file) =>
+               file.id?.startsWith("temp-"),
+            );
+            const serverFiles = [...data.files].reverse();
+
+            return [...uploadingFiles, ...serverFiles];
+         });
       } catch (error) {
          setErrorMessage(error.message);
       }
@@ -204,6 +211,20 @@ function DirectoryView() {
       // Take first item
       const [currentItem, ...restQueue] = queue;
 
+      function removeUploadItem() {
+         setFilesList((prev) => prev.filter((f) => f.id !== currentItem.id));
+         setProgressMap((prev) => {
+            const nextProgressMap = { ...prev };
+            delete nextProgressMap[currentItem.id];
+            return nextProgressMap;
+         });
+         setUploadXhrMap((prev) => {
+            const nextXhrMap = { ...prev };
+            delete nextXhrMap[currentItem.id];
+            return nextXhrMap;
+         });
+      }
+
       // Mark it as isUploading: true
       setFilesList((prev) =>
          prev.map((f) =>
@@ -225,7 +246,18 @@ function DirectoryView() {
       });
 
       xhr.addEventListener("load", () => {
+         if (xhr.status < 200 || xhr.status >= 300) {
+            setErrorMessage(`Upload failed with status ${xhr.status}`);
+         }
+         removeUploadItem();
+
          // Move on to the next item
+         processUploadQueue(restQueue);
+      });
+
+      xhr.addEventListener("error", () => {
+         setErrorMessage("Upload failed due to a network error");
+         removeUploadItem();
          processUploadQueue(restQueue);
       });
 

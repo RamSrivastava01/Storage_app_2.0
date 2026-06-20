@@ -128,7 +128,7 @@ function DirectoryItem({
                BASE_URL={BASE_URL}
             />
          )}
-      </div>
+      </div> 
    );
 }
 
