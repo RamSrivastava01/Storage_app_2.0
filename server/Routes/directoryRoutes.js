@@ -6,7 +6,7 @@ import path, { dirname, join } from "path";
 import directoriesData from "../directoriesDB.json" with { type: "json" };
 import filesData from "../filesDB.json" with { type: "json" };
 import crypto from "crypto";
-import usersData from "../usersDB.json" with { type: "json" };
+
 import validateIdMiddleware from "../middlewares/validateIdMiddleware.js";
 
 // Using multer library for file upload on to the server;

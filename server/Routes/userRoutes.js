@@ -2,10 +2,11 @@ import express from "express";
 import cors from "cors";
 import crypto from "crypto";
 import directoriesData from "../directoriesDB.json" with { type: "json" };
-import usersData from "../usersDB.json" with { type: "json" };
+
 import { writeFile } from "fs/promises";
 import CheckAuth from "../middlewares/auth.js";
-
+import { Db } from "mongodb";
+/** @type {import('mongodb').Db} */
 const router = express.Router();
 
 //use cookie parser for parsing the request from the browser
@@ -15,39 +16,35 @@ const router = express.Router();
 
 router.post("/register", async (req, res, next) => {
    const { name, email, password } = req.body;
-   console.log(name);
-   const foundUser = usersData.find((user) => user.email == email);
+
+   const db = req.db;
+   const foundUser = await db.collection("users").findOne({ email });
 
    if (foundUser) {
       return res.status(409).json({ error: "User already exists" });
    }
 
-   const dirId = crypto.randomUUID();
-   const userId = crypto.randomUUID();
-   directoriesData.push({
-      id: dirId,
-      name: `root-${email}`,
-      userId,
-      parentDirId: null,
-      files: [],
-      directories: [],
-   });
-   usersData.push({
-      id: userId,
-      name,
-      email,
-      password,
-      rootDirId: dirId,
-   });
-
    try {
-      await writeFile("./directoriesDB.json", JSON.stringify(directoriesData));
-      await writeFile("./usersDB.json", JSON.stringify(usersData));
-      res.cookie("uid", userId, {
-         httpOnly: true,
-         maxAge: 60 * 1000 * 60 * 24 * 7,
-         sameSite: "lax",
+      const userRootDir = await db.collection("directories").insertOne({
+         name: `root-${email}`,
+
+         parentDirId: null,
+         files: [],
+         directories: [],
       });
+
+      const rootDirId = userRootDir.insertedId;
+      // console.log(userRootDir);
+      const createdUser = await db.collection("users").insertOne({
+         name,
+         email,
+         password,
+         rootDirId,
+      });
+      const userId = createdUser.insertedId;
+      await db
+         .collection("directories")
+         .updateOne({ _id: rootDirId }, { $set: { userId } });
       res.status(201).json({ message: `User created with ID ${userId}` });
    } catch (error) {
       next(error);
@@ -65,12 +62,19 @@ router.get("/", CheckAuth, async (req, res) => {
 
 router.post("/login", async (req, res) => {
    const { email, password } = req.body;
-   const user = usersData.find((user) => user.email == email);
-   if (!user || user.password != password) {
+   const db = req.db;
+
+   const user = await db.collection("users").findOne({ email, password });
+
+   // console.log(user.rootDirId);
+   if (!user) {
       return res.status(404).json({ error: "Invalid credentials" });
    }
 
-   res.cookie("uid", user.id, {
+   const userOId = user._id.toString();
+   console.log({ userOId });
+
+   res.cookie("uid", userOId, {
       httpOnly: true,
       maxAge: 60 * 1000 * 60 * 24 * 7,
       sameSite: "lax",

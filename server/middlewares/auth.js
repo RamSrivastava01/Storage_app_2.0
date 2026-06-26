@@ -1,10 +1,18 @@
-import usersData from "../usersDB.json" with { type: "json" };
+import { ObjectId } from "mongodb";
 
-export default function CheckAuth(req, res, next) {
+export default async function CheckAuth(req, res, next) {
+   const db = req.db;
+
    const { uid } = req.cookies;
 
-   const user = usersData.find((user) => user.id === uid);
-   if (!uid || !user) {
+   if (!uid) {
+      return res.status(401).json({ error: "User Not Logged In" });
+   }
+
+   const user = await db
+      .collection("users")
+      .findOne({ _id: new ObjectId(String(uid)) });
+   if (!user) {
       return res.status(401).json({ error: "User Not Logged In" });
    }
    req.user = user;
