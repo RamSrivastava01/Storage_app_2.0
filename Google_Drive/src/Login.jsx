@@ -41,7 +41,6 @@ const Login = () => {
             },
             credentials: "include",
          });
-
          const data = await response.json();
          if (data.error) {
             // If there's an error, set the serverError message

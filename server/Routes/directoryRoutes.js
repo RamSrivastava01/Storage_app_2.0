@@ -20,6 +20,8 @@ router.param("id", validateIdMiddleware);
 router.param("parentDirId", validateIdMiddleware);
 
 router.get("/{:id}", async (req, res) => {
+   const db = req.db;
+   console.log(db.namespace);
    const user = req.user;
    const id = req.params.id || user.rootDirId;
    const directoryData = directoriesData.find(
