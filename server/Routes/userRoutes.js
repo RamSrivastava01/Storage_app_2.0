@@ -1,7 +1,6 @@
 import express from "express";
 import cors from "cors";
 import crypto from "crypto";
-import directoriesData from "../directoriesDB.json" with { type: "json" };
 
 import { writeFile } from "fs/promises";
 import CheckAuth from "../middlewares/auth.js";

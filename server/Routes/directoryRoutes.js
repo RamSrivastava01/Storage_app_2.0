@@ -3,8 +3,7 @@ import { createWriteStream } from "fs";
 import { rename, rm, stat, writeFile } from "fs/promises";
 import cors from "cors";
 import path, { dirname, join } from "path";
-import directoriesData from "../directoriesDB.json" with { type: "json" };
-import filesData from "../filesDB.json" with { type: "json" };
+
 import crypto from "crypto";
 import validateIdMiddleware from "../middlewares/validateIdMiddleware.js";
 import { Db, ObjectId } from "mongodb";
@@ -37,7 +36,11 @@ router.get("/{:id}", async (req, res) => {
       });
    }
 
-   const files = [];
+   const files = await db
+      .collection("files")
+      .find({ parentDirId: directoryData._id })
+      .toArray();
+
    const directories = await dirCollection
       .find({
          parentDirId: { $in: [id, directoryObjectId] },
@@ -46,7 +49,7 @@ router.get("/{:id}", async (req, res) => {
       .toArray();
    return res.status(200).json({
       ...directoryData,
-      files,
+      files: files.map((file) => ({ ...file, id: file._id })),
       directories: directories.map((dir) => ({ ...dir, id: dir._id })),
    });
 });
@@ -100,7 +103,7 @@ router.patch("/:id", async (req, res, next) => {
             _id: new ObjectId(id),
             userId: user._id,
          },
-         { $set: { name: newDirName  } },
+         { $set: { name: newDirName } },
       );
       console.log(a);
       res.status(200).json({ message: "Directory Renamed!" });
