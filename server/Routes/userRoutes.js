@@ -27,14 +27,11 @@ router.post("/register", async (req, res, next) => {
    try {
       const userRootDir = await db.collection("directories").insertOne({
          name: `root-${email}`,
-
          parentDirId: null,
-         files: [],
-         directories: [],
       });
 
       const rootDirId = userRootDir.insertedId;
-      // console.log(userRootDir);
+
       const createdUser = await db.collection("users").insertOne({
          name,
          email,
