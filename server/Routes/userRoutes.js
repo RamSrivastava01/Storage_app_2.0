@@ -1,11 +1,10 @@
 import express from "express";
 import cors from "cors";
-import crypto from "crypto";
 
-import { writeFile } from "fs/promises";
+import { rm, writeFile } from "fs/promises";
 import CheckAuth from "../middlewares/auth.js";
 import { Db } from "mongodb";
-/** @type {import('mongodb').Db} */
+
 const router = express.Router();
 
 //use cookie parser for parsing the request from the browser
