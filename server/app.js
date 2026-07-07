@@ -8,7 +8,7 @@ import directoryRoutes from "./Routes/directoryRoutes.js";
 import filesRoutes from "./Routes/filesRoutes.js";
 import userRoutes from "./Routes/userRoutes.js";
 import CheckAuth from "./middlewares/auth.js";
-import { connectDb } from "../config/db.js";
+import { connectDb } from "./config/db.js";
 
 try {
    const db = await connectDb();
