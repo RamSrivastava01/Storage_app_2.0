@@ -8,7 +8,7 @@ import directoryRoutes from "./Routes/directoryRoutes.js";
 import filesRoutes from "./Routes/filesRoutes.js";
 import userRoutes from "./Routes/userRoutes.js";
 import CheckAuth from "./middlewares/auth.js";
-import { connectDb } from "./db.js";
+import { connectDb } from "../config/db.js";
 
 try {
    const db = await connectDb();
@@ -44,7 +44,7 @@ try {
    app.use("/user", userRoutes);
 
    app.use((err, req, res, next) => {
-      console.log("error occured", err.message);
+      console.log("error occurred", err.message);
       return res.status(500).json({ error: "Internal Server Error" });
    });
 
