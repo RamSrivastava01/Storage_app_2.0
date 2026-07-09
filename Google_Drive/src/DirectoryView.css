@@ -167,7 +167,13 @@ input {
    height: 4px;
    margin: -18px -18px 16px;
    border-radius: 8px 8px 0 0;
-   background: linear-gradient(90deg, var(--blue), var(--teal), var(--amber), var(--coral));
+   background: linear-gradient(
+      90deg,
+      var(--blue),
+      var(--teal),
+      var(--amber),
+      var(--coral)
+   );
 }
 
 .directory-header {
@@ -279,8 +285,17 @@ input {
    border: 1px solid rgba(30, 41, 59, 0.09);
    border-radius: 8px;
    background:
-      linear-gradient(135deg, rgba(255, 255, 255, 0.86), rgba(255, 255, 255, 0.58)),
-      linear-gradient(90deg, var(--soft-blue), var(--soft-teal), var(--soft-amber));
+      linear-gradient(
+         135deg,
+         rgba(255, 255, 255, 0.86),
+         rgba(255, 255, 255, 0.58)
+      ),
+      linear-gradient(
+         90deg,
+         var(--soft-blue),
+         var(--soft-teal),
+         var(--soft-amber)
+      );
    box-shadow: 0 10px 28px rgba(27, 39, 65, 0.07);
 }
 
@@ -436,7 +451,12 @@ input {
    position: absolute;
    inset: 0;
    pointer-events: none;
-   background: linear-gradient(110deg, transparent 0%, rgba(255, 255, 255, 0.42) 42%, transparent 64%);
+   background: linear-gradient(
+      110deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.42) 42%,
+      transparent 64%
+   );
    opacity: 0;
    transform: translateX(-42%);
    transition:
@@ -749,7 +769,13 @@ input {
    width: min(320px, 72vw);
    height: 8px;
    border-radius: 999px;
-   background: linear-gradient(90deg, var(--blue), var(--teal), var(--amber), var(--coral));
+   background: linear-gradient(
+      90deg,
+      var(--blue),
+      var(--teal),
+      var(--amber),
+      var(--coral)
+   );
    opacity: 0.34;
 }
 

@@ -1,3 +1,4 @@
+import { Session } from "inspector";
 import { connectDb, client } from "./db.js";
 
 try {
@@ -57,9 +58,10 @@ try {
             },
             additionalProperties: false,
          },
-         validationAction: "error",
-         validationLevel: "strict",
       },
+
+      validationAction: "error",
+      validationLevel: "strict",
    });
 
    await db.command({
@@ -92,12 +94,14 @@ try {
             },
             additionalProperties: false,
          },
-         validationAction: "error",
-         validationLevel: "strict",
       },
+
+      validationAction: "error",
+      validationLevel: "strict",
    });
 } catch (error) {
    console.log("error setting up the Database");
 } finally {
    client.close();
 }
+Session.star

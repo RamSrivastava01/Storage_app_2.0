@@ -3,7 +3,8 @@ import cors from "cors";
 
 import { rm, writeFile } from "fs/promises";
 import CheckAuth from "../middlewares/auth.js";
-import { Db } from "mongodb";
+import { Db, ObjectId } from "mongodb";
+import { client } from "../config/db.js";
 
 const router = express.Router();
 
@@ -14,35 +15,58 @@ const router = express.Router();
 
 router.post("/register", async (req, res, next) => {
    const { name, email, password } = req.body;
-
    const db = req.db;
    const foundUser = await db.collection("users").findOne({ email });
-
    if (foundUser) {
-      return res.status(409).json({ error: "User already exists" });
+      return res.status(409).json({
+         error: "User already exists",
+         message:
+            "A user with this email address already exists. Please try logging in or use a different email.",
+      });
    }
+   const session = client.startSession();
 
    try {
-      const userRootDir = await db.collection("directories").insertOne({
-         name: `root-${email}`,
-         parentDirId: null,
-      });
+      const rootDirId = new ObjectId();
+      const userId = new ObjectId();
+      const dirCollection = db.collection("directories");
 
-      const rootDirId = userRootDir.insertedId;
+      // startTransaction()
+      session.startTransaction();
 
-      const createdUser = await db.collection("users").insertOne({
-         name,
-         email,
-         password,
-         rootDirId,
-      });
-      const userId = createdUser.insertedId;
-      await db
-         .collection("directories")
-         .updateOne({ _id: rootDirId }, { $set: { userId } });
-      res.status(201).json({ message: `User created with ID ${userId}` });
+      await dirCollection.insertOne(
+         {
+            _id: rootDirId,
+            name: `root-${email}`,
+            parentDirId: null,
+            userId,
+         },
+         { session },
+      );
+
+      await db.collection("users").insertOne(
+         {
+            _id: userId,
+            name,
+            email,
+            password,
+            rootDirId,
+         },
+         { session },
+      );
+
+      // commitTransaction()
+      await session.commitTransaction();
+      res.status(201).json({ message: "User Registered" });
    } catch (error) {
-      next(error);
+      await session.abortTransaction();
+      if (error.code == 121) {
+         res.status(400).json({
+            error: "Invalid fields while Registering user",
+         });
+      } else {
+         next(error);
+      }
    }
 });
 
