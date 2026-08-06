@@ -1,4 +1,4 @@
-import { ObjectId } from "mongodb";
+import User from "../models/userModel.js";
 
 export default async function CheckAuth(req, res, next) {
    const db = req.db;
@@ -9,9 +9,7 @@ export default async function CheckAuth(req, res, next) {
       return res.status(401).json({ error: "User Not Logged In" });
    }
 
-   const user = await db
-      .collection("users")
-      .findOne({ _id: new ObjectId(String(uid)) });
+   const user = await User.findOne({ _id: uid }).lean();
    if (!user) {
       return res.status(401).json({ error: "User Not Logged In" });
    }

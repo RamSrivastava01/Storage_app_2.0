@@ -1,7 +1,10 @@
-import { ObjectId } from "mongodb";
 import { client } from "../config/db.js";
+import User from "../models/userModel.js";
+import mongoose, { Mongoose, Schema, Types } from "mongoose";
+import Directory from "../models/directoryModel.js";
 
 export const userRegister = async (req, res, next) => {
+   console.log("start of user register route");
    const { name, email, password } = req.body;
    const db = req.db;
    const foundUser = await db.collection("users").findOne({ email });
@@ -12,17 +15,16 @@ export const userRegister = async (req, res, next) => {
             "A user with this email address already exists. Please try logging in or use a different email.",
       });
    }
-   const session = client.startSession();
+   const session = await mongoose.startSession();
 
    try {
-      const rootDirId = new ObjectId();
-      const userId = new ObjectId();
-      const dirCollection = db.collection("directories");
+      const rootDirId = new Types.ObjectId();
+      const userId = new Types.ObjectId();
 
       // startTransaction()
       session.startTransaction();
 
-      await dirCollection.insertOne(
+      await Directory.insertOne(
          {
             _id: rootDirId,
             name: `root-${email}`,
@@ -32,7 +34,7 @@ export const userRegister = async (req, res, next) => {
          { session },
       );
 
-      await db.collection("users").insertOne(
+      await User.insertOne(
          {
             _id: userId,
             name,
@@ -58,7 +60,7 @@ export const userRegister = async (req, res, next) => {
    }
 };
 
-export const validateUser = async (req, res) => {
+export const getUser = async (req, res) => {
    return res.status(200).json({
       name: req.user.name,
       email: req.user.email,
@@ -67,9 +69,8 @@ export const validateUser = async (req, res) => {
 
 export const userLogin = async (req, res) => {
    const { email, password } = req.body;
-   const db = req.db;
 
-   const user = await db.collection("users").findOne({ email, password });
+   const user = await User.findOne({ email, password });
 
    // console.log(user.rootDirId);
    if (!user) {
