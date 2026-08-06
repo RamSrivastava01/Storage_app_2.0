@@ -9,9 +9,10 @@ import filesRoutes from "./Routes/filesRoutes.js";
 import userRoutes from "./Routes/userRoutes.js";
 import CheckAuth from "./middlewares/auth.js";
 import { connectDb } from "./config/db.js";
-
+import "./config/mongoose.js";
 try {
    const db = await connectDb();
+
    const app = express();
 
    app.use(cookieParser());

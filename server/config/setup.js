@@ -2,7 +2,9 @@ import { Session } from "inspector";
 import { connectDb, client } from "./db.js";
 
 try {
-   const db = await connectDb();
+   const db = await connectDb(
+      "mongodb://admin:admin@localhost:27017/storageApp?replicaSet=myReplicaSet",
+   );
 
    await db.command({
       collMod: "users",
@@ -56,7 +58,7 @@ try {
                   bsonType: "objectId",
                },
             },
-            additionalProperties: false,
+            additionalProperties: true,
          },
       },
 
@@ -101,7 +103,7 @@ try {
    });
 } catch (error) {
    console.log("error setting up the Database");
+   console.log(error);
 } finally {
    client.close();
 }
-Session.star
