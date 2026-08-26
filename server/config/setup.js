@@ -1,4 +1,3 @@
-import { Session } from "inspector";
 import { connectDb, client } from "./db.js";
 
 try {

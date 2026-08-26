@@ -1,6 +1,6 @@
-import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import "./Auth.css";
+import { useState } from "react";
 
 const Register = () => {
    const BASE_URL = `${window.location.protocol}//${window.location.hostname}:4000`;

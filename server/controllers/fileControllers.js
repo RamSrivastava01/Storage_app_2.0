@@ -4,16 +4,15 @@ import { rm } from "fs/promises";
 import path from "path";
 import validateIdMiddleware from "../middlewares/validateIdMiddleware.js";
 import { router } from "../Routes/filesRoutes.js";
+import Directory from "../models/directoryModel.js";
+import File from "../models/fileModel.js";
 
 export const uploadFile = async (req, res) => {
-   const db = req.db;
-   const dirCollection = db.collection("directories");
-   const filesCollection = db.collection("files");
    const parentDirId = req.params.parentDirId || req.user.rootDirId;
-   const parentDirData = await dirCollection.findOne({
-      _id: new ObjectId(parentDirId),
+   const parentDirData = await Directory.findOne({
+      _id: parentDirId,
    });
-   console.log(parentDirData);
+
    if (!parentDirData) {
       return res
          .status(401)
@@ -24,13 +23,15 @@ export const uploadFile = async (req, res) => {
 
    const extension = path.extname(filename);
 
-   const insertedFile = await db.collection("files").insertOne({
+   const insertedFile = await File.insertOne({
       extension,
       name: filename,
       parentDirId: parentDirData._id,
       userId: req.user._id,
    });
-   const fileId = insertedFile.insertedId.toString();
+   console.log(insertedFile);
+
+   const fileId = insertedFile.id;
    const fullFileName = `${fileId}${extension}`;
    const writeStream = createWriteStream(`./storage/${fullFileName}`);
    req.pipe(writeStream);
@@ -47,7 +48,7 @@ export const uploadFile = async (req, res) => {
    });
 
    req.on("error", async () => {
-      await filesCollection.deleteOne({ _id: insertedFile.insertedId });
+      await File.deleteOne({ _id: insertedFile.insertedId });
       return res.status(404).json({
          message: "File upload failed",
       });
@@ -55,13 +56,12 @@ export const uploadFile = async (req, res) => {
 };
 
 export const getFile = async (req, res) => {
-   const db = req.db;
    const { id } = req.params;
-   const fileCollection = db.collection("files");
-   const fileData = await fileCollection.findOne({
+
+   const fileData = await File.findOne({
       _id: new ObjectId(id),
       userId: req.user._id,
-   });
+   }).lean();
 
    if (!fileData) {
       return res.status(404).json({ message: `${id} does not exist` });
@@ -83,9 +83,8 @@ export const getFile = async (req, res) => {
 
 export const renameFile = async (req, res) => {
    const { id } = req.params;
-   const db = req.db;
-   const fileCollection = db.collection("files");
-   const fileData = await fileCollection.findOne({
+
+   const fileData = await File.findOne({
       _id: new ObjectId(id),
       userId: req.user._id,
    });
@@ -94,10 +93,8 @@ export const renameFile = async (req, res) => {
    }
 
    try {
-      await fileCollection.updateOne(
-         { _id: new ObjectId(id) },
-         { $set: { name: req.body.newFilename } },
-      );
+      fileData.name = req.body.newFilename;
+      await fileData.save();
       return res.status(200).json({
          message: "File rename successful",
       });
@@ -111,10 +108,9 @@ export const renameFile = async (req, res) => {
 
 export const deleteFile = async (req, res) => {
    const { id } = req.params;
-   const db = req.db;
-   const fileCollection = db.collection("files");
-   const fileData = await fileCollection.findOne({
-      _id: new ObjectId(id),
+
+   const fileData = await File.findOne({
+      _id: id,
       userId: req.user._id,
    });
 
@@ -123,7 +119,7 @@ export const deleteFile = async (req, res) => {
    }
    try {
       await rm(`./storage/${id}${fileData.extension}`);
-      await fileCollection.deleteOne({ _id: fileData._id });
+      await fileData.deleteOne();
 
       return res.json({ message: "File Deleted Successfully" });
    } catch (err) {

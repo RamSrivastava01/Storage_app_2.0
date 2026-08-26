@@ -1,13 +1,15 @@
-import { client } from "../config/db.js";
 import User from "../models/userModel.js";
 import mongoose, { Mongoose, Schema, Types } from "mongoose";
 import Directory from "../models/directoryModel.js";
+import crypto from "crypto";
+
+export const secretKey = "123";
 
 export const userRegister = async (req, res, next) => {
    console.log("start of user register route");
    const { name, email, password } = req.body;
-   const db = req.db;
-   const foundUser = await db.collection("users").findOne({ email });
+
+   const foundUser = await User.findOne({ email });
    if (foundUser) {
       return res.status(409).json({
          error: "User already exists",
@@ -54,6 +56,12 @@ export const userRegister = async (req, res, next) => {
          res.status(400).json({
             error: "Invalid fields while Registering user",
          });
+      } else if (error.code === 11000 && error.keyValue.email) {
+         return res.status(409).json({
+            error: "User already exists",
+            message:
+               "A user with this email address already exists. Please try logging in or use a different email.",
+         });
       } else {
          next(error);
       }
@@ -78,10 +86,23 @@ export const userLogin = async (req, res) => {
    }
 
    const userOId = user._id.toString();
-   console.log({ userOId });
+   const cookiePayload = JSON.stringify({
+      id: user._id.toString(),
+      expiry: Math.round(Date.now() / 1000 + 10),
+   });
 
-   res.cookie("uid", userOId, {
+   const signature = crypto
+      .createHash("sha256")
+      .update(cookiePayload)
+      .update(secretKey)
+      .digest("base64url");
+
+   const signedCookiePayload = `${Buffer.from(cookiePayload).toString("base64url")}.${signature}`;
+   console.log({ signedCookiePayload });
+
+   res.cookie("token", signedCookiePayload, {
       httpOnly: true,
+
       maxAge: 60 * 1000 * 60 * 24 * 7,
       sameSite: "lax",
    });

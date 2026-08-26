@@ -1,15 +1,40 @@
+import { secretKey } from "../controllers/userControllers.js";
 import User from "../models/userModel.js";
+import crypto from "crypto";
 
 export default async function CheckAuth(req, res, next) {
    const db = req.db;
 
-   const { uid } = req.cookies;
+   const { token } = req.cookies;
 
-   if (!uid) {
+   if (!token) {
       return res.status(401).json({ error: "User Not Logged In" });
    }
+   const [payload, oldSignature] = token.split(".");
+   let { id, expiry: expiryTimeInSeconds } = JSON.parse(
+      Buffer.from(payload, "base64url").toString(),
+   );
+   expiryTimeInSeconds = Math.round(parseInt(expiryTimeInSeconds));
+   // console.log({ expiryTimeInSeconds });
+   const jsonPayload = Buffer.from(payload, "base64url").toString();
+   const newSignature = crypto
+      .createHash("sha256")
+      .update(jsonPayload)
+      .update(secretKey)
+      .digest("base64url");
+   console.log({ newSignature, oldSignature });
+   if (oldSignature != newSignature) {
+      res.clearCookie("token");
+      return res.status(401).json({ error: "Not logged in" });
+   }
+   const currentTimeInSeconds = Date.now() / 1000;
 
-   const user = await User.findOne({ _id: uid }).lean();
+   if (currentTimeInSeconds > expiryTimeInSeconds) {
+      res.clearCookie("token");
+      return res.status(204).json({ error: "Not logged in !" });
+   }
+   // console.log({ expiryTimeInSeconds, currentTimeInSeconds });
+   const user = await User.findOne({ _id: id }).lean();
    if (!user) {
       return res.status(401).json({ error: "User Not Logged In" });
    }

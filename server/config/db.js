@@ -1,3 +1,4 @@
+import mongoose from "mongoose";
 import { MongoClient } from "mongodb";
 
 export const client = new MongoClient(
@@ -5,14 +6,19 @@ export const client = new MongoClient(
 );
 
 export async function connectDb() {
-   await client.connect();
-   console.log("Database connected successfully");
-   const db = client.db();
-   return db;
+   try {
+      await mongoose.connect(
+         "mongodb://ram:ram@localhost:27017/storageApp?replicaSet=myReplicaSet",
+      );
+   } catch (error) {
+      console.log(error);
+      console.log("Could not connect to the database");
+      process.exit(1);
+   }
 }
 
 process.on("SIGINT", async () => {
-   await client.close();
+   await mongoose.disconnect();
    console.log("Database disconnected Successfully");
    process.exit(0);
 });
