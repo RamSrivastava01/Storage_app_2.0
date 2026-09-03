@@ -10,6 +10,7 @@ export async function connectDb() {
       await mongoose.connect(
          "mongodb://ram:ram@localhost:27017/storageApp?replicaSet=myReplicaSet",
       );
+      console.log("DB connection successful");
    } catch (error) {
       console.log(error);
       console.log("Could not connect to the database");

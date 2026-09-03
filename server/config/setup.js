@@ -1,10 +1,11 @@
-import { connectDb, client } from "./db.js";
+import mongoose from "mongoose";
+import { connectDb } from "./db.js";
+
+await connectDb();
+const client = mongoose.connection.getClient();
 
 try {
-   const db = await connectDb(
-      "mongodb://admin:admin@localhost:27017/storageApp?replicaSet=myReplicaSet",
-   );
-
+   const db = mongoose.connection.db;
    await db.command({
       collMod: "users",
       validator: {

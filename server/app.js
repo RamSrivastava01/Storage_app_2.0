@@ -15,7 +15,7 @@ await connectDb();
 console.log("connected to the database");
 const app = express();
 
-app.use(cookieParser());
+app.use(cookieParser("123"));
 
 const PORT = 4000;
 app.use(express.json());

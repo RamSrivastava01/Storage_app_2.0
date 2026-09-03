@@ -19,6 +19,19 @@ export const userRegister = async (req, res, next) => {
    }
    const session = await mongoose.startSession();
 
+   const salt = crypto.randomBytes(16);
+
+   const hashedPassword = crypto.pbkdf2Sync(
+      password,
+      salt,
+      100000,
+      32,
+      "sha256",
+   );
+   // const hashedPassword = crypto
+   //    .createHash("sha256")
+   //    .update(password)
+   //    .digest("base64url");
    try {
       const rootDirId = new Types.ObjectId();
       const userId = new Types.ObjectId();
@@ -41,7 +54,7 @@ export const userRegister = async (req, res, next) => {
             _id: userId,
             name,
             email,
-            password,
+            password: `${salt.toString("base64url")}.${hashedPassword.toString("base64url")}`,
             rootDirId,
          },
          { session },
@@ -52,6 +65,8 @@ export const userRegister = async (req, res, next) => {
       res.status(201).json({ message: "User Registered" });
    } catch (error) {
       await session.abortTransaction();
+      // console.log(error.errInfo.details.schemaRulesNotSatisfied);
+      console.log(error);
       if (error.code == 121) {
          res.status(400).json({
             error: "Invalid fields while Registering user",
@@ -78,33 +93,59 @@ export const getUser = async (req, res) => {
 export const userLogin = async (req, res) => {
    const { email, password } = req.body;
 
-   const user = await User.findOne({ email, password });
-
-   // console.log(user.rootDirId);
+   // const user = await User.findOne({ email, password }); //we can not find this user like this now as we are using hashing
+   const user = await User.findOne({ email });
    if (!user) {
-      return res.status(404).json({ error: "Invalid credentials" });
+      // console.log(user.rootDirId);
+      return res
+         .status(404)
+         .json({ error: "Invalid credentials, User not found!" });
    }
 
-   const userOId = user._id.toString();
+   const [salt, savedHashedPassword] = user.password.split(".");
+
+   console.log({ salt, savedHashedPassword });
+
+   const enteredPasswordHash = crypto
+      .pbkdf2Sync(
+         password,
+         Buffer.from(salt, "base64url"),
+         100000,
+         32,
+         "sha256",
+      )
+      .toString("base64url");
+
+   console.log({ enteredPasswordHash, savedHashedPassword });
+
+   // const enteredPasswordHash = crypto
+   //    .createHash("sha256")
+   //    .update(password)
+   //    .digest("base64url");
+
+   if (savedHashedPassword != enteredPasswordHash) {
+      return res.status(400).json({ error: "invalid password" });
+   }
+
+   // const userOId = user._id.toString();
    const cookiePayload = JSON.stringify({
       id: user._id.toString(),
       expiry: Math.round(Date.now() / 1000 + 10),
    });
 
-   const signature = crypto
-      .createHash("sha256")
-      .update(cookiePayload)
-      .update(secretKey)
-      .digest("base64url");
+   // const signature = crypto
+   //    .createHash("sha256")
+   //    .update(cookiePayload)
+   //    .update(secretKey)
+   //    .digest("base64url");
 
-   const signedCookiePayload = `${Buffer.from(cookiePayload).toString("base64url")}.${signature}`;
-   console.log({ signedCookiePayload });
+   // const signedCookiePayload = `${Buffer.from(cookiePayload).toString("base64url")}.${signature}`;
+   // console.log({ signedCookiePayload });
 
-   res.cookie("token", signedCookiePayload, {
+   res.cookie("token", cookiePayload, {
       httpOnly: true,
-
+      signed: true,
       maxAge: 60 * 1000 * 60 * 24 * 7,
-      sameSite: "lax",
    });
 
    res.json({ message: "logged in" });
