@@ -1,7 +1,9 @@
 import User from "../models/userModel.js";
-import mongoose, { Mongoose, Schema, Types } from "mongoose";
+import mongoose from "mongoose";
 import Directory from "../models/directoryModel.js";
-import crypto from "crypto";
+
+import bcrypt from "bcrypt";
+import Session from "../models/sessionModel.js";
 
 export const secretKey = "123";
 
@@ -19,19 +21,19 @@ export const userRegister = async (req, res, next) => {
    }
    const session = await mongoose.startSession();
 
-   const salt = crypto.randomBytes(16);
+   // const salt = crypto.randomBytes(16);
 
-   const hashedPassword = crypto.pbkdf2Sync(
-      password,
-      salt,
-      100000,
-      32,
-      "sha256",
-   );
+   /*// const hashedPassword = crypto.pbkdf2Sync(
+   //    password,
+   //    salt,
+   //    100000,
+   //    32,
+   //    "sha256",
+   // );
    // const hashedPassword = crypto
    //    .createHash("sha256")
    //    .update(password)
-   //    .digest("base64url");
+//    .digest("base64url");*/
    try {
       const rootDirId = new Types.ObjectId();
       const userId = new Types.ObjectId();
@@ -54,7 +56,8 @@ export const userRegister = async (req, res, next) => {
             _id: userId,
             name,
             email,
-            password: `${salt.toString("base64url")}.${hashedPassword.toString("base64url")}`,
+            // password: `${salt.toString("base64url")}.${hashedPassword.toString("base64url")}`,
+            password,
             rootDirId,
          },
          { session },
@@ -66,7 +69,7 @@ export const userRegister = async (req, res, next) => {
    } catch (error) {
       await session.abortTransaction();
       // console.log(error.errInfo.details.schemaRulesNotSatisfied);
-      console.log(error);
+
       if (error.code == 121) {
          res.status(400).json({
             error: "Invalid fields while Registering user",
@@ -102,36 +105,57 @@ export const userLogin = async (req, res) => {
          .json({ error: "Invalid credentials, User not found!" });
    }
 
-   const [salt, savedHashedPassword] = user.password.split(".");
+   // const [salt, savedHashedPassword] = user.password.split(".");
 
-   console.log({ salt, savedHashedPassword });
-
-   const enteredPasswordHash = crypto
-      .pbkdf2Sync(
-         password,
-         Buffer.from(salt, "base64url"),
-         100000,
-         32,
-         "sha256",
-      )
-      .toString("base64url");
-
-   console.log({ enteredPasswordHash, savedHashedPassword });
+   // console.log({ salt, savedHashedPassword });
 
    // const enteredPasswordHash = crypto
-   //    .createHash("sha256")
-   //    .update(password)
-   //    .digest("base64url");
+   //    .pbkdf2Sync(
+   //       password,
+   //       Buffer.from(salt, "base64url"),
+   //       100000,
+   //       32,
+   //       "sha256",
+   //    )
+   //    .toString("base64url");
 
-   if (savedHashedPassword != enteredPasswordHash) {
-      return res.status(400).json({ error: "invalid password" });
-   }
+   // console.log({ enteredPasswordHash, savedHashedPassword });
+
+   // // const enteredPasswordHash = crypto
+   // //    .createHash("sha256")
+   // //    .update(password)
+   // //    .digest("base64url");
+
+   // if (savedHashedPassword != enteredPasswordHash) {
+   //    return res.status(400).json({ error: "invalid password" });
+   // }
 
    // const userOId = user._id.toString();
-   const cookiePayload = JSON.stringify({
-      id: user._id.toString(),
-      expiry: Math.round(Date.now() / 1000 + 10),
+
+   const isPasswordValid = await user.comparePassword(password, user.password);
+   if (!isPasswordValid) {
+      return res
+         .status(404)
+         .json({ error: "Invalid Password, Try something else!" });
+   } // this functionality has been moved to the pre hook in the user model
+
+   const allSessions = await Session.find({ userId: user.id });
+   console.log({ allSessions });
+   if (allSessions.length >= 3) {
+      await allSessions[0].deleteOne();
+   }
+
+   const session = await Session.create({ userId: user._id });
+
+   res.cookie("sid", session.id, {
+      httpOnly: true,
+      signed: true,
+      maxAge: 60 * 1000 * 60 * 24 * 7,
    });
+   // const cookiePayload = JSON.stringify({
+   //    id: user._id.toString(),
+   //    expiry: Math.round((Date.now() / 1000) * 60 * 60 * 24 * 7),
+   // });
 
    // const signature = crypto
    //    .createHash("sha256")
@@ -142,20 +166,25 @@ export const userLogin = async (req, res) => {
    // const signedCookiePayload = `${Buffer.from(cookiePayload).toString("base64url")}.${signature}`;
    // console.log({ signedCookiePayload });
 
-   res.cookie("token", cookiePayload, {
-      httpOnly: true,
-      signed: true,
-      maxAge: 60 * 1000 * 60 * 24 * 7,
-   });
-
-   res.json({ message: "logged in" });
+   return res.json({ message: "logged in" });
 };
 
-export const userLogout = (req, res) => {
-   res.cookie("uid", "", {
-      maxAge: 0,
-   });
-
+export const userLogout = async (req, res) => {
+   // res.cookie("sid", "", {
+   //    maxAge: 0,
+   // });
    //we can also use clearCookie() --> This will clear the cookie from the client
-   res.status(200).json({ message: "User logged out !" });
+   const { sid } = req.signedCookies;
+   console.log({ sid });
+   await Session.findByIdAndDelete(sid);
+   res.clearCookie("sid");
+   return res.status(200).json({ message: "User logged out !" });
+};
+export const userLogoutAll = async (req, res) => {
+   const { sid } = req.signedCookies;
+   console.log({ sid });
+   const session = await Session.findById(sid);
+   await Session.deleteMany({ userId: session.userId });
+   res.clearCookie("sid");
+   return res.status(200).json({ message: "User logged out !" });
 };

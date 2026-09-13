@@ -23,14 +23,15 @@ export const uploadFile = async (req, res) => {
 
    const extension = path.extname(filename);
 
+   console.log("file insertion started");
    const insertedFile = await File.insertOne({
       extension,
       name: filename,
       parentDirId: parentDirData._id,
       userId: req.user._id,
    });
-   console.log(insertedFile);
 
+   console.log("file insertion complete");
    const fileId = insertedFile.id;
    const fullFileName = `${fileId}${extension}`;
    const writeStream = createWriteStream(`./storage/${fullFileName}`);

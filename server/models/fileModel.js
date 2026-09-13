@@ -22,6 +22,7 @@ const fileSchema = new Schema(
    },
    {
       strict: "throw",
+      versionKey: false,
    },
 );
 const File = model("File", fileSchema);

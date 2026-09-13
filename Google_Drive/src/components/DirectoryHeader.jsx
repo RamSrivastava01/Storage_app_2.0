@@ -98,6 +98,30 @@ function DirectoryHeader({
       }
    };
 
+   // Logout all handler
+
+   const handleLogoutAll = async () => {
+      try {
+         const response = await fetch(`${BASE_URL}/user/logout-all`, {
+            method: "POST",
+            credentials: "include",
+         });
+         if (response.ok) {
+            console.log("Logged out successfully");
+            // Optionally reset local state
+            setLoggedIn(false);
+            setUserName("Guest User");
+            setUserEmail("guest@example.com");
+            navigate("/login");
+         } else {
+            console.error("Logout failed");
+         }
+      } catch (err) {
+         console.error("Logout error:", err);
+      } finally {
+         setShowUserMenu(false);
+      }
+   };
    // -------------------------------------------
    // 4. Close menu on outside click
    // -------------------------------------------
@@ -200,6 +224,13 @@ function DirectoryHeader({
                            >
                               <FaSignOutAlt className="menu-item-icon" />
                               <span>Logout</span>
+                           </div>
+                           <div
+                              className="user-menu-item login-btn"
+                              onClick={handleLogoutAll}
+                           >
+                              <FaSignOutAlt className="menu-item-icon" />
+                              <span>Logout from all devices</span>
                            </div>
                         </>
                      ) : (
