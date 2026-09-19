@@ -77,6 +77,79 @@
    box-shadow: 0 0 0 4px rgba(45, 108, 223, 0.12);
 }
 
+.otp-email-input {
+   padding-right: 100px;
+}
+
+.otp-button {
+   position: absolute;
+   top: 33px;
+   right: 8px;
+   min-height: 32px;
+   padding: 0 10px;
+   border: 0;
+   border-radius: 6px;
+   color: #ffffff;
+   background: #2d6cdf;
+   cursor: pointer;
+   font-size: 0.75rem;
+   font-weight: 800;
+   transition: background 0.18s ease, opacity 0.18s ease;
+}
+
+.otp-button:hover:not(:disabled) {
+   background: #1f57ba;
+}
+
+.otp-button:disabled {
+   cursor: not-allowed;
+   opacity: 0.5;
+}
+
+.otp-button.sent {
+   background: #16815b;
+}
+
+.otp-status {
+   display: block;
+   margin-top: 6px;
+   color: #16815b;
+   font-size: 0.76rem;
+   font-weight: 700;
+}
+
+.verify-otp-button {
+   min-height: 40px;
+   width: 100%;
+   margin-top: 10px;
+   border: 1px solid #2d6cdf;
+   border-radius: 8px;
+   color: #2d6cdf;
+   background: transparent;
+   cursor: pointer;
+   font-weight: 800;
+}
+
+.verify-otp-button:disabled {
+   cursor: not-allowed;
+   opacity: 0.5;
+}
+
+.otp-feedback {
+   display: block;
+   margin-top: 7px;
+   font-size: 0.76rem;
+   font-weight: 700;
+}
+
+.otp-feedback.verified {
+   color: #16815b;
+}
+
+.otp-feedback.error {
+   color: #b4232d;
+}
+
 .input-error {
    border-color: rgba(211, 63, 73, 0.64);
    box-shadow: 0 0 0 4px rgba(211, 63, 73, 0.1);

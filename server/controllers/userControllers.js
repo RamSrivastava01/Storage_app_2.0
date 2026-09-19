@@ -1,6 +1,7 @@
 import User from "../models/userModel.js";
 import mongoose from "mongoose";
 import Directory from "../models/directoryModel.js";
+import OTP from "../models/otpModel.js";
 
 import bcrypt from "bcrypt";
 import Session from "../models/sessionModel.js";
@@ -10,6 +11,18 @@ export const secretKey = "123";
 export const userRegister = async (req, res, next) => {
    console.log("start of user register route");
    const { name, email, password } = req.body;
+
+   // Do not rely on the disabled browser button: requests can be sent directly.
+   const verifiedOtp = await OTP.findOne({ email, verifiedAt: { $ne: null } });
+   const otpExpired =
+      !verifiedOtp ||
+      Date.now() - verifiedOtp.createdAt.getTime() > 10 * 60 * 1000;
+   if (otpExpired) {
+      if (verifiedOtp) await verifiedOtp.deleteOne();
+      return res.status(403).json({
+         error: "Verify the email OTP before registering.",
+      });
+   }
 
    const foundUser = await User.findOne({ email });
    if (foundUser) {
@@ -35,8 +48,8 @@ export const userRegister = async (req, res, next) => {
    //    .update(password)
 //    .digest("base64url");*/
    try {
-      const rootDirId = new Types.ObjectId();
-      const userId = new Types.ObjectId();
+      const rootDirId = new mongoose.Types.ObjectId();
+      const userId = new mongoose.Types.ObjectId();
 
       // startTransaction()
       session.startTransaction();
@@ -65,6 +78,7 @@ export const userRegister = async (req, res, next) => {
 
       // commitTransaction()
       await session.commitTransaction();
+      await verifiedOtp.deleteOne();
       res.status(201).json({ message: "User Registered" });
    } catch (error) {
       await session.abortTransaction();

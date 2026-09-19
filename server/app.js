@@ -7,6 +7,7 @@ import cookieParser from "cookie-parser";
 import directoryRoutes from "./Routes/directoryRoutes.js";
 import filesRoutes from "./Routes/filesRoutes.js";
 import userRoutes from "./Routes/userRoutes.js";
+import authRoutes from "./Routes/authRoutes.js";
 import CheckAuth from "./middlewares/auth.js";
 import { connectDb } from "./config/db.js";
 import "./config/mongoose.js";
@@ -17,8 +18,8 @@ const app = express();
 
 app.use(cookieParser("123"));
 
-const PORT = 4000;
 app.use(express.json());
+const PORT = 4000;
 // const allowedOrigins = ["http://localhost:5173", "http://127.0.0.1:5173"];
 
 app.use(
@@ -45,6 +46,8 @@ app.use("/directory", CheckAuth, directoryRoutes);
 app.use("/file", CheckAuth, filesRoutes);
 
 app.use("/user", userRoutes);
+
+app.use("/auth", authRoutes);
 
 app.use((err, req, res, next) => {
    console.log("error occurred", err.message);
