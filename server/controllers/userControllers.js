@@ -34,19 +34,20 @@ export const userRegister = async (req, res, next) => {
    }
    const session = await mongoose.startSession();
 
-   // const salt = crypto.randomBytes(16);
+   //    // const salt = crypto.randomBytes(16);
 
-   /*// const hashedPassword = crypto.pbkdf2Sync(
-   //    password,
-   //    salt,
-   //    100000,
-   //    32,
-   //    "sha256",
-   // );
-   // const hashedPassword = crypto
-   //    .createHash("sha256")
-   //    .update(password)
-//    .digest("base64url");*/
+   //    /*// const hashedPassword = crypto.pbkdf2Sync(
+   //    //    password,
+   //    //    salt,
+   //    //    100000,
+   //    //    32,
+   //    //    "sha256",
+
+   //    // );
+   //    // const hashedPassword = crypto
+   //    //    .createHash("sha256")
+   //    //    .update(password)
+   // //    .digest("base64url");*/}
    try {
       const rootDirId = new mongoose.Types.ObjectId();
       const userId = new mongoose.Types.ObjectId();
