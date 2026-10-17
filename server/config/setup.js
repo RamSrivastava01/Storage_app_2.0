@@ -10,7 +10,7 @@ try {
       collMod: "users",
       validator: {
          $jsonSchema: {
-            required: ["_id", "name", "email", "password", "rootDirId"],
+            required: ["_id", "name", "email", "rootDirId"],
             properties: {
                _id: {
                   bsonType: "objectId",
@@ -29,6 +29,9 @@ try {
                },
                rootDirId: {
                   bsonType: "objectId",
+               },
+               picture: {
+                  bsonType: "string",
                },
             },
             additionalProperties: false,

@@ -20,12 +20,16 @@ const userSchema = new Schema(
       password: {
          type: String,
          minLength: 4,
-         required: true,
       },
       rootDirId: {
          type: Schema.Types.ObjectId,
 
          ref: "Directory",
+      },
+      picture: {
+         type: String,
+         default:
+            "https://img.icons8.com/liquid-glass-color/1200/user-male-circle.jpg",
       },
    },
    {

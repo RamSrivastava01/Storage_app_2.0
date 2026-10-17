@@ -34,7 +34,7 @@ export const userRegister = async (req, res, next) => {
    }
    const session = await mongoose.startSession();
 
-   //    // const salt = crypto.randomBytes(16);
+   // // const salt = crypto.randomBytes(16);
 
    //    /*// const hashedPassword = crypto.pbkdf2Sync(
    //    //    password,
@@ -105,6 +105,7 @@ export const getUser = async (req, res) => {
    return res.status(200).json({
       name: req.user.name,
       email: req.user.email,
+      picture: req.user.picture,
    });
 };
 

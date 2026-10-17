@@ -10,6 +10,7 @@ import {
    FaLayerGroup,
    FaFolder,
    FaFileAlt,
+   FaUsers,
 } from "react-icons/fa";
 
 function DirectoryHeader({
@@ -30,6 +31,7 @@ function DirectoryHeader({
    const [loggedIn, setLoggedIn] = useState(false);
    const [userName, setUserName] = useState("Guest User");
    const [userEmail, setUserEmail] = useState("guest@example.com");
+   const [picture, setPicture] = useState("");
 
    const userMenuRef = useRef(null);
    const navigate = useNavigate();
@@ -48,6 +50,7 @@ function DirectoryHeader({
                // Set user info if logged in
                setUserName(data.name);
                setUserEmail(data.email);
+               setPicture(data.picture);
                setLoggedIn(true);
             } else if (response.status === 401) {
                // User not logged in
@@ -165,6 +168,14 @@ function DirectoryHeader({
          </div>
 
          <div className="header-links">
+            <button
+               className="action-button"
+               title="User access"
+               onClick={() => navigate("/users")}
+            >
+               <FaUsers />
+               <span>Users</span>
+            </button>
             {/* Create Folder (icon button) */}
             <button
                className="action-button"
@@ -205,7 +216,11 @@ function DirectoryHeader({
                   onClick={handleUserIconClick}
                   disabled={disabled}
                >
-                  <FaUser />
+                  {picture ? (
+                     <img className="userPicture" src={picture} />
+                  ) : (
+                     <FaUser />
+                  )}
                </button>
 
                {showUserMenu && (

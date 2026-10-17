@@ -1,5 +1,10 @@
 import OTP from "../models/otpModel.js";
+import { verifyIdToken } from "../utils/googleAuthService.js";
 import { sendOtp } from "../utils/sendOtp.js";
+import User from "../models/userModel.js";
+import mongoose from "mongoose";
+import Directory from "../models/directoryModel.js";
+import Session from "../models/sessionModel.js";
 
 export async function sendOtpController(req, res, next) {
    try {
@@ -54,3 +59,87 @@ export async function verifyOtpController(req, res, next) {
       return next(error);
    }
 }
+
+//Login with google controller
+
+export const loginWithGoogle = async (req, res, next) => {
+   const { idToken } = req.body;
+
+   const userData = await verifyIdToken(idToken);
+   const { name, email, picture, sub } = userData;
+   const user = await User.findOne({ email }).lean();
+   if (user) {
+      const allSessions = await Session.find({ userId: user.id });
+      console.log({ allSessions });
+      if (allSessions.length >= 3) {
+         await allSessions[0].deleteOne();
+      }
+
+      const session = await Session.create({ userId: user._id });
+
+      res.cookie("sid", session.id, {
+         httpOnly: true,
+         signed: true,
+         maxAge: 60 * 1000 * 60 * 24 * 7,
+      });
+      return res.json({ message: "logged inn" });
+   }
+
+   //Initializing the transaction
+   const mongooseSession = await mongoose.startSession();
+
+   try {
+      const rootDirId = new mongoose.Types.ObjectId();
+      const userId = new mongoose.Types.ObjectId();
+
+      mongooseSession.startTransaction();
+      // startTransaction()
+
+      await Directory.insertOne(
+         {
+            _id: rootDirId,
+            name: `root-${email}`,
+            parentDirId: null,
+            userId,
+         },
+         { session: mongooseSession },
+      );
+
+      const newUser = await User.insertOne(
+         {
+            _id: userId,
+            name,
+            email,
+            picture,
+            rootDirId,
+         },
+         { session: mongooseSession },
+      );
+
+      //finding session
+      const allSessions = await Session.find({ userId });
+      console.log({ allSessions });
+      if (allSessions.length >= 3) {
+         await allSessions[0].deleteOne();
+      }
+
+      const session = await Session.create({ userId});
+
+      res.cookie("sid", session.id, {
+         httpOnly: true,
+         signed: true,
+         maxAge: 60 * 1000 * 60 * 24 * 7,
+      });
+      await mongooseSession.commitTransaction();
+
+      return res.json({ message: "logged in with new user" });
+
+      // res.status(201).json(newUser);
+   } catch (error) {
+      await mongooseSession.abortTransaction();
+
+      next(error);
+   } finally {
+      mongooseSession.endSession();
+   }
+};

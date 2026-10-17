@@ -1,6 +1,8 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { GoogleLogin } from "@react-oauth/google";
 import "./Auth.css";
+import { loginWithGoogle } from "./apis/loginWithGoogle.js";
 
 const Login = () => {
    const BASE_URL = `${window.location.protocol}//${window.location.hostname}:4000`;
@@ -102,11 +104,40 @@ const Login = () => {
                Login
             </button>
          </form>
-
          {/* Link to the register page */}
          <p className="link-text">
             Don't have an account? <Link to="/register">Register</Link>
          </p>
+         <hr
+            style={{
+               color: "#000000",
+               backgroundColor: "#000000",
+               height: 0.5,
+               borderColor: "#000000",
+            }}
+         />
+         <div className="google-login">
+            <GoogleLogin
+               onSuccess={async (credentialResponse) => {
+                  console.log(credentialResponse);
+                  const data = await loginWithGoogle(
+                     credentialResponse.credential,
+                  );
+                  if (data.error) {
+                     console.log(data);
+                     return;
+                  } else {
+                     navigate("/");
+                  }
+               }}
+               onError={() => {
+                  console.log("Login Failed");
+               }}
+               shape="pill"
+               theme="filled_blue"
+               useOneTap
+            />
+         </div>
       </div>
    );
 };

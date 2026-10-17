@@ -1,6 +1,8 @@
 import { useNavigate, Link } from "react-router-dom";
 import "./Auth.css";
 import { useEffect, useState } from "react";
+import { GoogleLogin } from "@react-oauth/google";
+import { loginWithGoogle } from "./apis/loginWithGoogle";
 
 const OTP_EXPIRY_SECONDS = 10 * 60;
 
@@ -284,6 +286,36 @@ const Register = () => {
          <p className="link-text">
             Already have an account? <Link to="/login">Login</Link>
          </p>
+         <hr
+            style={{
+               color: "#000000",
+               backgroundColor: "#000000",
+               height: 0.5,
+               borderColor: "#000000",
+            }}
+         />
+         <div className="google-login">
+            <GoogleLogin
+               onSuccess={async (credentialResponse) => {
+                  console.log(credentialResponse);
+                  const data = await loginWithGoogle(
+                     credentialResponse.credential,
+                  );
+                  if (data.error) {
+                     console.log(data);
+                     return;
+                  } else {
+                     navigate("/");
+                  }
+               }}
+               onError={() => {
+                  console.log("Login Failed");
+               }}
+               shape="pill"
+               theme="filled_blue"
+               useOneTap
+            />
+         </div>
       </div>
    );
 };
