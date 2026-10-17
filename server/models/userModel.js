@@ -31,6 +31,11 @@ const userSchema = new Schema(
          default:
             "https://img.icons8.com/liquid-glass-color/1200/user-male-circle.jpg",
       },
+      role: {
+         type: String,
+         enum: ["Admin", "Manager", "User"],
+         default: "User",
+      },
    },
    {
       strict: "throw",

@@ -8,7 +8,7 @@ export default async function CheckAuth(req, res, next) {
       res.clearCookie("sid");
       return res.status(401).json({ error: "User Not Logged In" });
    }
-
+   
    const session = await Session.findById(sid);
 
    if (!session) {

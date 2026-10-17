@@ -108,7 +108,21 @@ export const getUser = async (req, res) => {
       picture: req.user.picture,
    });
 };
-
+export const getAllUser = async (req, res) => {
+   const allUsers = await User.find().lean();
+   const allSessions = await Session.find().lean();
+   const allSessionsUserId = allSessions.map(({ userId }) => userId.toString());
+   const allSessionsUserIdSet = new Set(allSessionsUserId);
+   const transformedUsers = allUsers.map(({ _id, name, email }) => {
+      return {
+         id: _id,
+         name,
+         email,
+         isLoggedIn: allSessionsUserIdSet.has(_id.toString()),
+      };
+   });
+   return res.json(transformedUsers);
+};
 export const userLogin = async (req, res) => {
    const { email, password } = req.body;
 

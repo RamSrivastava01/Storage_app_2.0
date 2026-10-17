@@ -1,39 +1,57 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { FaArrowLeft, FaCloud, FaSignOutAlt, FaUsers } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import "./Users.css";
 
 // This is intentionally display-only UI until the RBAC API is introduced.
-const users = [
-   {
-      id: 1,
-      name: "Aarav Sharma",
-      email: "aarav.sharma@example.com",
-      isLoggedIn: true,
-   },
-   {
-      id: 2,
-      name: "Priya Patel",
-      email: "priya.patel@example.com",
-      isLoggedIn: false,
-   },
-   {
-      id: 3,
-      name: "Rohan Mehta",
-      email: "rohan.mehta@example.com",
-      isLoggedIn: true,
-   },
-   {
-      id: 4,
-      name: "Neha Gupta",
-      email: "neha.gupta@example.com",
-      isLoggedIn: false,
-   },
-];
+// const users = [
+//    {
+//       id: 1,
+//       name: "Aarav Sharma",
+//       email: "aarav.sharma@example.com",
+//       isLoggedIn: true,
+//    },
+//    {
+//       id: 2,
+//       name: "Priya Patel",
+//       email: "priya.patel@example.com",
+//       isLoggedIn: false,
+//    },
+//    {
+//       id: 3,
+//       name: "Rohan Mehta",
+//       email: "rohan.mehta@example.com",
+//       isLoggedIn: true,
+//    },
+//    {
+//       id: 4,
+//       name: "Neha Gupta",
+//       email: "neha.gupta@example.com",
+//       isLoggedIn: false,
+//    },
+// ];
 
+const BASE_URL = `http://localhost:4000`;
 function Users() {
    const navigate = useNavigate();
-   const [userList, setUserList] = useState(users);
+   const [userList, setUserList] = useState([]);
+
+   useEffect(() => {
+      async function fetchAllUsers() {
+         const response = await fetch(`${BASE_URL}/users`, {
+            credentials: "include",
+         });
+         if (response.ok) {
+            const users = await response.json();
+            setUserList(users);
+            console.log(users);
+         } else if (response.status == 403) {
+            navigate("/");
+         }
+      }
+
+      fetchAllUsers();
+   }, []);
 
    function handleLogout(userId) {
       setUserList((currentUsers) =>
@@ -95,46 +113,49 @@ function Users() {
                      </tr>
                   </thead>
                   <tbody>
-                     {userList.map((user) => (
-                        <tr key={user.id}>
-                           <td>
-                              <div className="user-name-cell">
+                     {userList &&
+                        userList.map((user) => (
+                           <tr key={user.id}>
+                              <td>
+                                 <div className="user-name-cell">
+                                    <span
+                                       className="user-avatar"
+                                       aria-hidden="true"
+                                    >
+                                       {user.name.charAt(0)}
+                                    </span>
+                                    {user.name}
+                                 </div>
+                              </td>
+                              <td>{user.email}</td>
+                              <td>
                                  <span
-                                    className="user-avatar"
-                                    aria-hidden="true"
+                                    className={`login-status ${user.isLoggedIn ? "is-active" : "is-inactive"}`}
                                  >
-                                    {user.name.charAt(0)}
+                                    <span aria-hidden="true" />
+                                    {user.isLoggedIn
+                                       ? "Logged in"
+                                       : "Logged out"}
                                  </span>
-                                 {user.name}
-                              </div>
-                           </td>
-                           <td>{user.email}</td>
-                           <td>
-                              <span
-                                 className={`login-status ${user.isLoggedIn ? "is-active" : "is-inactive"}`}
-                              >
-                                 <span aria-hidden="true" />
-                                 {user.isLoggedIn ? "Logged in" : "Logged out"}
-                              </span>
-                           </td>
-                           <td className="user-action-cell">
-                              <button
-                                 className="user-logout-button"
-                                 type="button"
-                                 onClick={() => handleLogout(user.id)}
-                                 disabled={!user.isLoggedIn}
-                                 title={
-                                    user.isLoggedIn
-                                       ? `Log ${user.name} out`
-                                       : `${user.name} is already logged out`
-                                 }
-                              >
-                                 <FaSignOutAlt />
-                                 Log out
-                              </button>
-                           </td>
-                        </tr>
-                     ))}
+                              </td>
+                              <td className="user-action-cell">
+                                 <button
+                                    className="user-logout-button"
+                                    type="button"
+                                    onClick={() => handleLogout(user.id)}
+                                    disabled={!user.isLoggedIn}
+                                    title={
+                                       user.isLoggedIn
+                                          ? `Log ${user.name} out`
+                                          : `${user.name} is already logged out`
+                                    }
+                                 >
+                                    <FaSignOutAlt />
+                                    Log out
+                                 </button>
+                              </td>
+                           </tr>
+                        ))}
                   </tbody>
                </table>
             </div>

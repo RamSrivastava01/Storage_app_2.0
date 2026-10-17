@@ -42,11 +42,8 @@ app.use(
 // });
 
 app.use("/directory", CheckAuth, directoryRoutes);
-
 app.use("/file", CheckAuth, filesRoutes);
-
-app.use("/user", userRoutes);
-
+app.use("/", userRoutes);
 app.use("/auth", authRoutes);
 
 app.use((err, req, res, next) => {
