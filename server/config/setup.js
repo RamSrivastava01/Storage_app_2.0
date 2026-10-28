@@ -37,6 +37,9 @@ try {
                   bsonType: "string",
                   enum: ["Admin", "Manager", "User"],
                },
+               deleted: {
+                  bsonType: "bool",
+               },
             },
             additionalProperties: false,
          },

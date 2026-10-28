@@ -2,8 +2,7 @@ import { ObjectId } from "mongodb";
 import { createWriteStream } from "fs";
 import { rm } from "fs/promises";
 import path from "path";
-import validateIdMiddleware from "../middlewares/validateIdMiddleware.js";
-import { router } from "../Routes/filesRoutes.js";
+
 import Directory from "../models/directoryModel.js";
 import File from "../models/fileModel.js";
 

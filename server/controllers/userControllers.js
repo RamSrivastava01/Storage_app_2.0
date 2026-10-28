@@ -3,14 +3,22 @@ import mongoose from "mongoose";
 import Directory from "../models/directoryModel.js";
 import OTP from "../models/otpModel.js";
 
-import bcrypt from "bcrypt";
 import Session from "../models/sessionModel.js";
+import { loginSchema, registerSchema } from "../validators/authSchema.js";
 
 export const secretKey = "123";
 
 export const userRegister = async (req, res, next) => {
    console.log("start of user register route");
-   const { name, email, password } = req.body;
+
+   const{success, data, error} = registerSchema.safeParse(req.body)
+   console.log(data)
+   if(!success){
+      return res.status(400).json({
+         error : "Invalid input, Enter valid fields"
+      })
+   }
+   const { name, email, password } =data;
 
    // Do not rely on the disabled browser button: requests can be sent directly.
    const verifiedOtp = await OTP.findOne({ email, verifiedAt: { $ne: null } });
@@ -106,10 +114,11 @@ export const getUser = async (req, res) => {
       name: req.user.name,
       email: req.user.email,
       picture: req.user.picture,
+      role: req.user.role,
    });
 };
 export const getAllUser = async (req, res) => {
-   const allUsers = await User.find().lean();
+   const allUsers = await User.find({ deleted: false }).lean();
    const allSessions = await Session.find().lean();
    const allSessionsUserId = allSessions.map(({ userId }) => userId.toString());
    const allSessionsUserIdSet = new Set(allSessionsUserId);
@@ -124,7 +133,13 @@ export const getAllUser = async (req, res) => {
    return res.json(transformedUsers);
 };
 export const userLogin = async (req, res) => {
-   const { email, password } = req.body;
+   const {success, data, error} = loginSchema.safeParse(req.body)
+    if(!success){
+      return res.status(400).json({
+         error : "Invalid input, Enter valid fields"
+      })
+   }
+   const { email, password } = data;
 
    // const user = await User.findOne({ email, password }); //we can not find this user like this now as we are using hashing
    const user = await User.findOne({ email });
@@ -170,12 +185,17 @@ export const userLogin = async (req, res) => {
    } // this functionality has been moved to the pre hook in the user model
 
    const allSessions = await Session.find({ userId: user.id });
-   console.log({ allSessions });
+
    if (allSessions.length >= 3) {
       await allSessions[0].deleteOne();
    }
 
    const session = await Session.create({ userId: user._id });
+   // ----> Implementing Redis in the application
+
+   // const sessionId = crypto.randomUUID();
+   // const redisKey = `session:${crypto.randomUUID()}`;
+   // await redisClient.json.set(redisKey, "$", { userId: user._id });
 
    res.cookie("sid", session.id, {
       httpOnly: true,
@@ -217,4 +237,34 @@ export const userLogoutAll = async (req, res) => {
    await Session.deleteMany({ userId: session.userId });
    res.clearCookie("sid");
    return res.status(200).json({ message: "User logged out !" });
+};
+
+export const logoutById = async (req, res, next) => {
+   console.log({ params: req.params });
+
+   try {
+      await Session.deleteMany({ userId: req.params.userId });
+      return res.status(204).end();
+   } catch (error) {
+      next(error);
+   }
+};
+
+export const deleteUserByAdmin = async (req, res, next) => {
+   const { userId } = req.params;
+   if (req.user._id.toString() == userId) {
+      return res.status(403).json({ error: "You can not delete yourself" });
+   }
+   try {
+      // Below code is deleting the user completely but we will implement soft delete
+      // await User.deleteOne({ _id: userId });
+      // await Directory.deleteMany({ userId });
+      // await File.deleteMany({ userId });
+
+      await User.findByIdAndUpdate(userId, { deleted: true });
+      await Session.deleteMany({ userId });
+      return res.status(204).end();
+   } catch (error) {
+      next(error);
+   }
 };

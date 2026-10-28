@@ -1,65 +1,102 @@
 import { useEffect, useState } from "react";
-import { FaArrowLeft, FaCloud, FaSignOutAlt, FaUsers } from "react-icons/fa";
+import {
+   FaArrowLeft,
+   FaCloud,
+   FaSignOutAlt,
+   FaTrashAlt,
+   FaUsers,
+} from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
 import "./Users.css";
 
-// This is intentionally display-only UI until the RBAC API is introduced.
-// const users = [
-//    {
-//       id: 1,
-//       name: "Aarav Sharma",
-//       email: "aarav.sharma@example.com",
-//       isLoggedIn: true,
-//    },
-//    {
-//       id: 2,
-//       name: "Priya Patel",
-//       email: "priya.patel@example.com",
-//       isLoggedIn: false,
-//    },
-//    {
-//       id: 3,
-//       name: "Rohan Mehta",
-//       email: "rohan.mehta@example.com",
-//       isLoggedIn: true,
-//    },
-//    {
-//       id: 4,
-//       name: "Neha Gupta",
-//       email: "neha.gupta@example.com",
-//       isLoggedIn: false,
-//    },
-// ];
-
-const BASE_URL = `http://localhost:4000`;
+const BASE_URL = `${window.location.protocol}//${window.location.hostname}:4000`;
 function Users() {
    const navigate = useNavigate();
    const [userList, setUserList] = useState([]);
+   const [, setUserName] = useState("Guest User");
+   const [, setUserEmail] = useState("guest@example.com");
+   const [userRole, setUserRole] = useState("User");
 
    useEffect(() => {
-      async function fetchAllUsers() {
-         const response = await fetch(`${BASE_URL}/users`, {
-            credentials: "include",
-         });
-         if (response.ok) {
-            const users = await response.json();
-            setUserList(users);
-            console.log(users);
-         } else if (response.status == 403) {
-            navigate("/");
-         }
-      }
-
+      fetchUser();
       fetchAllUsers();
    }, []);
 
-   function handleLogout(userId) {
-      setUserList((currentUsers) =>
-         currentUsers.map((user) =>
-            user.id === userId ? { ...user, isLoggedIn: false } : user,
-         ),
-      );
+   async function fetchAllUsers() {
+      const response = await fetch(`${BASE_URL}/users`, {
+         credentials: "include",
+      });
+      if (response.ok) {
+         const users = await response.json();
+         setUserList(users);
+         console.log(users);
+      } else if (response.status == 403) {
+         navigate("/");
+      }
    }
+   async function fetchUser() {
+      try {
+         const response = await fetch(`${BASE_URL}/user`, {
+            credentials: "include",
+         });
+         if (response.ok) {
+            const data = await response.json();
+            // Set user info if logged in
+            setUserName(data.name);
+            setUserEmail(data.email);
+            setUserRole(data.role);
+         } else if (response.status === 401) {
+            // User not logged in
+            navigate("/login");
+            setUserName("Guest User");
+            setUserEmail("guest@example.com");
+         } else {
+            // Handle other error statuses if needed
+            console.error("Error fetching user info:", response.status);
+         }
+      } catch (err) {
+         console.error("Error fetching user info:", err);
+      }
+   }
+   fetchUser();
+
+   const logoutUser = async (userId) => {
+      const confirmLogout = confirm("Delete an User?");
+      if (!confirmLogout) return;
+      try {
+         const response = await fetch(`${BASE_URL}/users/${userId}/logout`, {
+            method: "POST",
+            credentials: "include",
+         });
+         if (response.ok) {
+            console.log("Logged out successfully");
+            fetchAllUsers();
+         } else {
+            console.error("Logout failed");
+         }
+      } catch (err) {
+         console.error("Logout error:", err);
+      }
+   };
+
+   const deleteUser = async (userId) => {
+      const confirmLogout = confirm("Delete an User?");
+      if (!confirmLogout) return;
+      try {
+         const response = await fetch(`${BASE_URL}/users/${userId}`, {
+            method: "DELETE",
+            credentials: "include",
+         });
+         if (response.ok) {
+            console.log("deleted  successfully");
+            fetchAllUsers();
+         } else {
+            console.error("Logout failed");
+         }
+      } catch (err) {
+         console.error("Logout error:", err);
+      }
+   };
 
    return (
       <main className="users-page">
@@ -139,20 +176,38 @@ function Users() {
                                  </span>
                               </td>
                               <td className="user-action-cell">
-                                 <button
-                                    className="user-logout-button"
-                                    type="button"
-                                    onClick={() => handleLogout(user.id)}
-                                    disabled={!user.isLoggedIn}
-                                    title={
-                                       user.isLoggedIn
-                                          ? `Log ${user.name} out`
-                                          : `${user.name} is already logged out`
-                                    }
-                                 >
-                                    <FaSignOutAlt />
-                                    Log out
-                                 </button>
+                                 <div className="user-actions">
+                                    <button
+                                       className="user-logout-button"
+                                       type="button"
+                                       onClick={() => logoutUser(user.id)}
+                                       disabled={!user.isLoggedIn}
+                                       title={
+                                          user.isLoggedIn
+                                             ? `Log ${user.name} out`
+                                             : `${user.name} is already logged out`
+                                       }
+                                    >
+                                       <FaSignOutAlt />
+                                       Log out
+                                    </button>
+                                    {userRole === "Admin" ? (
+                                       <button
+                                          className="user-delete-button"
+                                          type="button"
+                                          onClick={() => {
+                                             console.log(user.id);
+                                             deleteUser(user.id);
+                                          }}
+                                          title={`Delete ${user.name}`}
+                                       >
+                                          <FaTrashAlt />
+                                          Delete user
+                                       </button>
+                                    ) : (
+                                       ""
+                                    )}
+                                 </div>
                               </td>
                            </tr>
                         ))}

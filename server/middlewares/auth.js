@@ -8,9 +8,9 @@ export default async function CheckAuth(req, res, next) {
       res.clearCookie("sid");
       return res.status(401).json({ error: "User Not Logged In" });
    }
-   
-   const session = await Session.findById(sid);
 
+   const session = await Session.findById(sid);
+   console.log({ session });
    if (!session) {
       res.clearCookie("sid");
 
@@ -45,3 +45,14 @@ export default async function CheckAuth(req, res, next) {
    req.user = user;
    next();
 }
+
+export const checkNotRegularUser = (req, res, next) => {
+   if (req.user.role != "User") return next();
+   return res.status(403).json({ error: "Not Authorized Person" });
+   
+};
+
+export const checkIsAdminUser = (req, res, next) => {
+   if (req.user.role === "Admin") return next();
+   return res.status(403).json({ error: "You can not delete users" });
+};

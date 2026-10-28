@@ -5,6 +5,7 @@ import User from "../models/userModel.js";
 import mongoose from "mongoose";
 import Directory from "../models/directoryModel.js";
 import Session from "../models/sessionModel.js";
+import { otpSchema } from "../validators/authSchema.js";
 
 export async function sendOtpController(req, res, next) {
    try {
@@ -22,6 +23,12 @@ export async function sendOtpController(req, res, next) {
 }
 
 export async function verifyOtpController(req, res, next) {
+   const {success, data, error} = otpSchema(req.body)
+   if(!success){
+      return res.status(400).json({
+         error : "Enter a valid OTP for verification"
+      })
+   }
    try {
       const { email, otp } = req.body;
 
@@ -69,6 +76,9 @@ export const loginWithGoogle = async (req, res, next) => {
    const { name, email, picture, sub } = userData;
    const user = await User.findOne({ email }).lean();
    if (user) {
+      if (user.deleted) {
+         return res.status(403).json({ error: "You account has been deleted" });
+      }
       const allSessions = await Session.find({ userId: user.id });
       console.log({ allSessions });
       if (allSessions.length >= 3) {
@@ -123,7 +133,7 @@ export const loginWithGoogle = async (req, res, next) => {
          await allSessions[0].deleteOne();
       }
 
-      const session = await Session.create({ userId});
+      const session = await Session.create({ userId });
 
       res.cookie("sid", session.id, {
          httpOnly: true,

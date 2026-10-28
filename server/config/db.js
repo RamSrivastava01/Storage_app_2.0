@@ -1,14 +1,9 @@
 import mongoose from "mongoose";
-import { MongoClient } from "mongodb";
-
-export const client = new MongoClient(
-   "mongodb://ram:ram@localhost:27017/storageApp?replicaSet=myReplicaSet",
-);
 
 export async function connectDb() {
    try {
       await mongoose.connect(
-         "mongodb://ram:ram@localhost:27017/storageApp?replicaSet=myReplicaSet",
+         "mongodb://admin:helloworld@127.0.0.1:27017/storageApp?authSource=admin&replicaSet=myReplicaSet",
       );
       console.log("DB connection successful");
    } catch (error) {

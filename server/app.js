@@ -1,6 +1,5 @@
 import express from "express";
-import { createWriteStream } from "fs";
-import { mkdir, readdir, rename, rm, stat } from "fs/promises";
+
 import cors from "cors";
 
 import cookieParser from "cookie-parser";
@@ -16,7 +15,7 @@ await connectDb();
 console.log("connected to the database");
 const app = express();
 
-app.use(cookieParser("123"));
+app.use(cookieParser(process.env.SESSION_SECRET));
 
 app.use(express.json());
 const PORT = 4000;

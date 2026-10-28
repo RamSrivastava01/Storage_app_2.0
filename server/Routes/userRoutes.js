@@ -1,9 +1,14 @@
 import express from "express";
-import cors from "cors";
-import CheckAuth from "../middlewares/auth.js";
+
+import CheckAuth, {
+   checkIsAdminUser,
+   checkNotRegularUser,
+} from "../middlewares/auth.js";
 import {
+   deleteUserByAdmin,
    getAllUser,
    getUser,
+   logoutById,
    userLogin,
    userLogout,
    userLogoutAll,
@@ -19,18 +24,18 @@ router.post("/user/register", userRegister);
 
 router.post("/user/login", userLogin);
 router.get("/user", CheckAuth, getUser);
-router.get(
-   "/users",
+router.get("/users", CheckAuth, checkNotRegularUser, getAllUser);
+
+router.post(
+   "/users/:userId/logout",
    CheckAuth,
-   (req, res, next) => {
-      if (req.user.role != "User") return next();
-      return res.status(403).json({ error: "Not Authorized Person" });
-      console.log(req.user);
-   },
-   getAllUser,
+   checkNotRegularUser,
+   logoutById,
 );
 
 router.post("/user/logout", userLogout);
 router.post("/user/logout-all", userLogoutAll);
+
+router.delete("/users/:userId", CheckAuth, checkIsAdminUser, deleteUserByAdmin);
 
 export default router;
