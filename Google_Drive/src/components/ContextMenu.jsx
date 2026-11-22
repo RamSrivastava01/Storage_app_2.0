@@ -1,6 +1,7 @@
 import {
     FaDownload,
     FaEdit,
+    FaInfoCircle,
     FaTrash,
     FaTimesCircle,
 } from "react-icons/fa";
@@ -14,6 +15,7 @@ function ContextMenu({
     handleDeleteFile,
     handleDeleteDirectory,
     openRenameModal,
+    onShowFileDetails,
     BASE_URL,
   }) {
     const menuStyle = {
@@ -86,6 +88,13 @@ function ContextMenu({
             >
               <FaEdit />
               <span>Rename</span>
+            </div>
+            <div
+              className="context-menu-item"
+              onClick={() => onShowFileDetails(item)}
+            >
+              <FaInfoCircle />
+              <span>Details</span>
             </div>
             <div
               className="context-menu-item danger-item"

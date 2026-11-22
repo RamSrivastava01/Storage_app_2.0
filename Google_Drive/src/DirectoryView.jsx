@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import DirectoryHeader from "./components/DirectoryHeader";
 import CreateDirectoryModal from "./components/CreateDirectoryModal";
+import FileDetailsModal from "./components/FileDetailsModal";
 import RenameModal from "./components/RenameModal";
 import DirectoryList from "./components/DirectoryList";
 import "./DirectoryView.css";
@@ -26,6 +27,7 @@ function DirectoryView() {
    const [newDirname, setNewDirname] = useState("New Folder");
 
    const [showRenameModal, setShowRenameModal] = useState(false);
+   const [fileDetails, setFileDetails] = useState(null);
    const [renameType, setRenameType] = useState(null); // "directory" or "file"
    const [renameId, setRenameId] = useState(null);
    const [renameValue, setRenameValue] = useState("");
@@ -491,6 +493,13 @@ function DirectoryView() {
                />
             )}
 
+            {fileDetails && (
+               <FileDetailsModal
+                  file={fileDetails}
+                  onClose={() => setFileDetails(null)}
+               />
+            )}
+
             {combinedItems.length === 0 ? (
                // Check if the error is specifically the "no access" error
                errorMessage ===
@@ -525,6 +534,7 @@ function DirectoryView() {
                   handleDeleteFile={handleDeleteFile}
                   handleDeleteDirectory={handleDeleteDirectory}
                   openRenameModal={openRenameModal}
+                  onShowFileDetails={setFileDetails}
                   BASE_URL={BASE_URL}
                />
             )}

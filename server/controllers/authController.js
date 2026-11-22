@@ -23,7 +23,7 @@ export async function sendOtpController(req, res, next) {
 }
 
 export async function verifyOtpController(req, res, next) {
-   const {success, data, error} = otpSchema(req.body)
+   const {success, data, error} = otpSchema.safeParse(req.body)
    if(!success){
       return res.status(400).json({
          error : "Enter a valid OTP for verification"
@@ -102,8 +102,8 @@ export const loginWithGoogle = async (req, res, next) => {
       const rootDirId = new mongoose.Types.ObjectId();
       const userId = new mongoose.Types.ObjectId();
 
-      mongooseSession.startTransaction();
       // startTransaction()
+      mongooseSession.startTransaction();
 
       await Directory.insertOne(
          {

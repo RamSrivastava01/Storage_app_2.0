@@ -1,5 +1,5 @@
 import { ObjectId } from "mongodb";
-import { rm } from "node:fs/promises";
+import { rm, stat } from "node:fs/promises";
 import Directory from "../models/directoryModel.js";
 import File from "../models/fileModel.js";
 export const getDirectorById = async (req, res) => {
@@ -19,6 +19,14 @@ export const getDirectorById = async (req, res) => {
    }
 
    const files = await File.find({ parentDirId: directoryData._id }).lean();
+   const filesWithSize = await Promise.all(
+      files.map(async (file) => {
+         const { size } = await stat(
+            `./storage/${file._id.toString()}${file.extension}`,
+         );
+         return { ...file, id: file._id, size };
+      }),
+   );
 
    const directories = await Directory.find({
       parentDirId: { $in: [id, directoryObjectId] },
@@ -26,7 +34,7 @@ export const getDirectorById = async (req, res) => {
    }).lean();
    return res.status(200).json({
       ...directoryData,
-      files: files.map((file) => ({ ...file, id: file._id })),
+      files: filesWithSize,
       directories: directories.map((dir) => ({ ...dir, id: dir._id })),
    });
 };

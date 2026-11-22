@@ -23,6 +23,7 @@ function DirectoryItem({
    handleDeleteFile,
    handleDeleteDirectory,
    openRenameModal,
+   onShowFileDetails,
    BASE_URL,
 }) {
    // Convert the file icon string to the actual Icon component
@@ -125,6 +126,7 @@ function DirectoryItem({
                handleDeleteFile={handleDeleteFile}
                handleDeleteDirectory={handleDeleteDirectory}
                openRenameModal={openRenameModal}
+               onShowFileDetails={onShowFileDetails}
                BASE_URL={BASE_URL}
             />
          )}
