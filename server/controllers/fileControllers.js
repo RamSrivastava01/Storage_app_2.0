@@ -19,25 +19,33 @@ export const uploadFile = async (req, res) => {
    }
 
    const filename = req.headers.filename || "untitled";
+   const fileSize = req.headers.filesize 
+   
+   if (fileSize > 50 * 1024 * 1024){
+      return res.status(413).json({error : "File too large ! \n 50 MB is the max limit"})
+   }
+
 
    const extension = path.extname(filename);
 
    console.log("file insertion started");
-   const insertedFile = await File.insertOne({
+   const insertedFile = await File.create({
       extension,
       name: filename,
+      size : fileSize,
       parentDirId: parentDirData._id,
       userId: req.user._id,
    });
+   console.log({insertedFile});
 
    console.log("file insertion complete");
-   const fileId = insertedFile.id;
+   const fileId = insertedFile._id;
    const fullFileName = `${fileId}${extension}`;
    const writeStream = createWriteStream(`./storage/${fullFileName}`);
    req.pipe(writeStream);
    req.on("end", async () => {
       try {
-         return res.status(201).json({ message: "File Uploaded" });
+         return res.status(201).json({ message: "File Uploaded", file : insertedFile });
       } catch (error) {
          // if we do next here then the error is caught by the global middleware.
          // Global middleware catches all the request sent by any route. if next() is called
@@ -48,7 +56,7 @@ export const uploadFile = async (req, res) => {
    });
 
    req.on("error", async () => {
-      await File.deleteOne({ _id: insertedFile.insertedId });
+      await File.deleteOne({ _id: insertedFile._id });
       return res.status(404).json({
          message: "File upload failed",
       });

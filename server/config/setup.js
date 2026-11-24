@@ -86,6 +86,10 @@ try {
                   bsonType: "string",
                   description: "must be a string and is required",
                },
+               size : {
+                  bsonType : "int",
+                  description : "Size of the file must be defined"
+               },
                _id: {
                   bsonType: "objectId",
                   description: "Id must be type of Object Id",
@@ -95,6 +99,14 @@ try {
                   description: "must be a string and is required",
                   pattern: "^\\.[a-zA-Z0-9]+$",
                },
+               createdAt: {
+                  bsonType: "date",
+                  description: "File creation timestamp"
+        },
+          updatedAt: {
+          bsonType: "date",
+          description: "Last modification timestamp"
+        },
                userId: {
                   bsonType: "objectId",
                   description: "must be an ObjectId and is required",
@@ -103,6 +115,7 @@ try {
                   bsonType: "objectId",
                   description: "must be an ObjectId and is required",
                },
+               
             },
             additionalProperties: false,
          },
@@ -110,6 +123,7 @@ try {
 
       validationAction: "error",
       validationLevel: "strict",
+      
    });
 } catch (error) {
    console.log("error setting up the Database");

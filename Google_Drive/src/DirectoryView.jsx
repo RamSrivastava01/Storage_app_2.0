@@ -161,6 +161,7 @@ function DirectoryView() {
     */
    function handleFileSelect(e) {
       const selectedFiles = Array.from(e.target.files);
+      console.log(selectedFiles);
       if (selectedFiles.length === 0) return;
 
       // Build a list of "temp" items
@@ -169,6 +170,7 @@ function DirectoryView() {
          return {
             file,
             name: file.name,
+            size: file.size,
             id: tempId,
             isUploading: false,
          };
@@ -239,6 +241,7 @@ function DirectoryView() {
       xhr.open("POST", `${BASE_URL}/file/${dirId || ""}`, true);
       xhr.withCredentials = true;
       xhr.setRequestHeader("filename", currentItem.name);
+      xhr.setRequestHeader("filesize", currentItem.size);
 
       xhr.upload.addEventListener("progress", (evt) => {
          if (evt.lengthComputable) {
